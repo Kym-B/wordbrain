@@ -40,11 +40,8 @@
     }
     .letter {
       position: absolute;
-      top: 50%;
-      left: 50%;
       width: 60px;
       height: 60px;
-      margin: -30px;
       background: linear-gradient(145deg, #ffffff, #e6e9ef);
       border: 2px solid #ccc;
       border-radius: 50%;
@@ -59,6 +56,7 @@
       cursor: pointer;
       transform: scale(0);
       animation: pop 0.5s ease-out forwards;
+      transform-origin: center center;
     }
     .letter:hover {
       animation: bounce 0.4s ease;
@@ -130,6 +128,7 @@
     /* Animations */
     @keyframes pop {
       0% { transform: scale(0); }
+      80% { transform: scale(1.2); }
       100% { transform: scale(1); }
     }
     @keyframes bounce {
@@ -185,9 +184,9 @@
         const div = document.createElement('div');
         div.className = 'letter';
         div.textContent = letters[i];
-        div.style.setProperty('--angle', angle + 'deg');
-        div.style.setProperty('--radius', x + 'px ' + y + 'px');
-        div.style.transform = `translate(${x}px, ${y}px)`;
+        // position via left/top
+        div.style.left = `calc(50% + ${x}px - 30px)`;
+        div.style.top = `calc(50% + ${y}px - 30px)`;
         div.style.animationDelay = `${i * 0.1}s`;
         div.addEventListener('click', () => {
           document.getElementById('word-input').value += letters[i].toLowerCase();
