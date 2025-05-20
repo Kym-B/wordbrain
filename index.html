@@ -48,7 +48,7 @@ const levelsConfig = [
 ];
 
 let validWords = [], currentWord = '', letters = [], foundWords = [], score = 0, multiplier = 1.0;
-let currentPossibleWords = [], wordsLeft = 0;
+let currentPossibleWords = [], layoutWords = [], wordsLeft = 0;
 let currentLevel = 0, roundsLeft = levelsConfig[0].rounds;
 const radius = 100;
 
@@ -58,9 +58,12 @@ function initPuzzle() {
   const pool = validWords.filter(w => w.length <= maxLength);
   currentWord = pool[Math.floor(Math.random() * pool.length)];
   currentPossibleWords = validWords.filter(w => w.length >= 2 && validateMultiset(w, currentWord));
+  // select and limit layout words
+  layoutWords = shuffle(currentPossibleWords).slice(0, rounds);
+  wordsLeft = layoutWords.length;
   wordsLeft = Math.min(currentPossibleWords.length, rounds);
   updateWordsLeft();
-  buildCrossword(currentWord, currentPossibleWords.slice(0, rounds));
+  buildCrossword(currentWord, layoutWords);
   letters = shuffle(currentWord.toUpperCase().split(''));
   displayLetters();
   updateStats();
