@@ -17,9 +17,12 @@
     h1 {
       margin-bottom: 20px;
       font-size: 2rem;
+      animation: fadeInTitle 0.6s ease-out;
     }
     #file-input {
       margin-bottom: 20px;
+      animation: fadeIn 0.6s ease-out 0.2s forwards;
+      opacity: 0;
     }
     .dial-container {
       position: relative;
@@ -27,6 +30,8 @@
       height: 140px;
       overflow: visible;
       margin-bottom: 20px;
+      opacity: 0;
+      animation: fadeIn 0.6s ease-out 0.4s forwards;
     }
     .letters {
       position: relative;
@@ -51,17 +56,19 @@
       color: #4a90e2;
       box-shadow: 2px 2px 5px rgba(0,0,0,0.1), -2px -2px 5px rgba(255,255,255,0.7);
       user-select: none;
-      transition: transform 0.2s;
       cursor: pointer;
+      transform: scale(0);
+      animation: pop 0.5s ease-out forwards;
     }
     .letter:hover {
-      transform: scale(1.15) rotate(var(--angle)) translate(var(--radius)) rotate(calc(-1 * var(--angle)));
-      z-index: 1;
+      animation: bounce 0.4s ease;
     }
     .controls {
       display: flex;
       gap: 10px;
       margin-bottom: 10px;
+      opacity: 0;
+      animation: fadeIn 0.6s ease-out 0.6s forwards;
     }
     .controls input[type="text"] {
       padding: 12px;
@@ -89,6 +96,8 @@
       height: 1.2em;
       margin-bottom: 10px;
       font-style: italic;
+      opacity: 0;
+      animation: fadeIn 0.6s ease-out 0.8s forwards;
     }
     #found-words {
       width: 280px;
@@ -96,6 +105,8 @@
       padding: 15px;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      opacity: 0;
+      animation: fadeIn 0.6s ease-out 1s forwards;
     }
     #found-words h2 {
       margin-top: 0;
@@ -112,11 +123,31 @@
     #found-words li {
       padding: 4px 0;
       border-bottom: 1px solid #f0f0f0;
+      opacity: 0;
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+
+    /* Animations */
+    @keyframes pop {
+      0% { transform: scale(0); }
+      100% { transform: scale(1); }
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    @keyframes fadeInTitle {
+      0% { opacity: 0; transform: translateY(-20px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <h1>Word Puzzle POC</h1>
+  <h1>Wordbrains</h1>
   <input type="file" id="file-input" accept=".txt,.csv" />
 
   <div class="dial-container">
@@ -147,7 +178,7 @@
       container.innerHTML = '';
       const N = letters.length;
       for (let i = 0; i < N; i++) {
-        const angle = (180 / (N - 1)) * i - 90; // bottom semi-circle
+        const angle = (180 / (N - 1)) * i - 90;
         const rad = angle * (Math.PI / 180);
         const x = Math.cos(rad) * radius;
         const y = Math.sin(rad) * radius;
@@ -157,6 +188,7 @@
         div.style.setProperty('--angle', angle + 'deg');
         div.style.setProperty('--radius', x + 'px ' + y + 'px');
         div.style.transform = `translate(${x}px, ${y}px)`;
+        div.style.animationDelay = `${i * 0.1}s`;
         div.addEventListener('click', () => {
           document.getElementById('word-input').value += letters[i].toLowerCase();
         });
@@ -234,9 +266,10 @@
     function updateFoundWords() {
       const list = document.getElementById('words-list');
       list.innerHTML = '';
-      foundWords.forEach(w => {
+      foundWords.forEach((w, idx) => {
         const li = document.createElement('li');
         li.textContent = w;
+        li.style.animationDelay = `${idx * 0.1}s`;
         list.appendChild(li);
       });
     }
