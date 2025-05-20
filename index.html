@@ -1,51 +1,169 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Word Puzzle POC</title>
   <style>
-    body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; margin-top: 50px; }
-    .letters { display: flex; gap: 10px; margin-bottom: 20px; }
-    .letter { width: 50px; height: 50px; border: 2px solid #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-    #found-words { margin-top: 20px; }
-    #message { margin-top: 10px; height: 1.2em; }
-    #file-input { margin-bottom: 20px; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
+      color: #333;
+    }
+    h1 {
+      margin-bottom: 20px;
+      font-size: 2rem;
+    }
+    #file-input {
+      margin-bottom: 20px;
+    }
+    .dial-container {
+      position: relative;
+      width: 280px;
+      height: 140px;
+      overflow: visible;
+      margin-bottom: 20px;
+    }
+    .letters {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    .letter {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 60px;
+      height: 60px;
+      margin: -30px;
+      background: linear-gradient(145deg, #ffffff, #e6e9ef);
+      border: 2px solid #ccc;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #4a90e2;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.1), -2px -2px 5px rgba(255,255,255,0.7);
+      user-select: none;
+      transition: transform 0.2s;
+      cursor: pointer;
+    }
+    .letter:hover {
+      transform: scale(1.15) rotate(var(--angle)) translate(var(--radius)) rotate(calc(-1 * var(--angle)));
+      z-index: 1;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .controls input[type="text"] {
+      padding: 12px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 200px;
+      box-shadow: inset 1px 1px 3px rgba(0,0,0,0.1);
+    }
+    .controls button {
+      padding: 12px 16px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 4px;
+      background: #4a90e2;
+      color: white;
+      cursor: pointer;
+      box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+      transition: background 0.2s;
+    }
+    .controls button:hover {
+      background: #357ab8;
+    }
+    #message {
+      height: 1.2em;
+      margin-bottom: 10px;
+      font-style: italic;
+    }
+    #found-words {
+      width: 280px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    #found-words h2 {
+      margin-top: 0;
+      font-size: 1.2rem;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 5px;
+    }
+    #found-words ul {
+      list-style: none;
+      padding-left: 0;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    #found-words li {
+      padding: 4px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
   </style>
 </head>
 <body>
   <h1>Word Puzzle POC</h1>
-  <!-- File import for word lists -->
   <input type="file" id="file-input" accept=".txt,.csv" />
-  <div class="letters" id="letters"></div>
-  <input type="text" id="word-input" placeholder="Enter word" />
-  <button id="submit-btn">Submit</button>
-  <button id="shuffle-btn">Shuffle</button>
+
+  <div class="dial-container">
+    <div class="letters" id="letters"></div>
+  </div>
+
+  <div class="controls">
+    <input type="text" id="word-input" placeholder="Tap letters or type" readonly />
+    <button id="submit-btn">Submit</button>
+    <button id="shuffle-btn">Shuffle</button>
+    <button id="clear-btn">Clear</button>
+  </div>
   <div id="message"></div>
+
   <div id="found-words">
     <h2>Found Words:</h2>
     <ul id="words-list"></ul>
   </div>
 
   <script>
-    // Default letters and word list
     const letters = ['C','A','T','E','R'];
     let validWords = ['cat','cater','crate','trace','react','eat','tea'];
     let foundWords = [];
+    const radius = 100;
 
-    // Display the letter tiles
     function displayLetters() {
       const container = document.getElementById('letters');
       container.innerHTML = '';
-      letters.forEach(letter => {
+      const N = letters.length;
+      for (let i = 0; i < N; i++) {
+        const angle = (180 / (N - 1)) * i - 90; // bottom semi-circle
+        const rad = angle * (Math.PI / 180);
+        const x = Math.cos(rad) * radius;
+        const y = Math.sin(rad) * radius;
         const div = document.createElement('div');
         div.className = 'letter';
-        div.textContent = letter;
+        div.textContent = letters[i];
+        div.style.setProperty('--angle', angle + 'deg');
+        div.style.setProperty('--radius', x + 'px ' + y + 'px');
+        div.style.transform = `translate(${x}px, ${y}px)`;
+        div.addEventListener('click', () => {
+          document.getElementById('word-input').value += letters[i].toLowerCase();
+        });
         container.appendChild(div);
-      });
+      }
     }
 
-    // Shuffle helper
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -53,32 +171,16 @@
       }
     }
 
-    // File import handler
-    document.getElementById('file-input').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        const text = evt.target.result;
-        let words = [];
-        if (file.name.endsWith('.csv')) {
-          // Split on commas and newlines
-          words = text.split(/[,\r?\n]+/);
-        } else {
-          // .txt: assume one word per line
-          words = text.split(/\r?\n/);
-        }
-        // Clean and filter
-        validWords = words.map(w => w.trim().toLowerCase()).filter(w => w);
-        foundWords = [];
-        updateFoundWords();
-        document.getElementById('message').textContent = `Loaded ${validWords.length} words from ${file.name}`;
-      };
-      reader.readAsText(file);
-      e.target.value = '';
+    document.getElementById('shuffle-btn').addEventListener('click', () => {
+      shuffle(letters);
+      displayLetters();
+      document.getElementById('word-input').value = '';
     });
 
-    // Submission handler
+    document.getElementById('clear-btn').addEventListener('click', () => {
+      document.getElementById('word-input').value = '';
+    });
+
     document.getElementById('submit-btn').addEventListener('click', () => {
       const inputEl = document.getElementById('word-input');
       const word = inputEl.value.trim().toLowerCase();
@@ -98,13 +200,27 @@
       inputEl.value = '';
     });
 
-    // Shuffle button
-    document.getElementById('shuffle-btn').addEventListener('click', () => {
-      shuffle(letters);
-      displayLetters();
+    document.getElementById('file-input').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const text = evt.target.result;
+        let words = [];
+        if (file.name.endsWith('.csv')) {
+          words = text.split(/[,\r?\n]+/);
+        } else {
+          words = text.split(/\r?\n/);
+        }
+        validWords = words.map(w => w.trim().toLowerCase()).filter(w => w);
+        foundWords = [];
+        updateFoundWords();
+        document.getElementById('message').textContent = `Loaded ${validWords.length} words from ${file.name}`;
+      };
+      reader.readAsText(file);
+      e.target.value = '';
     });
 
-    // Letter validation
     function validateLetters(word) {
       const temp = [...letters];
       for (let char of word) {
@@ -115,7 +231,6 @@
       return true;
     }
 
-    // Update displayed found words
     function updateFoundWords() {
       const list = document.getElementById('words-list');
       list.innerHTML = '';
