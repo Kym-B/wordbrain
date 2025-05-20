@@ -115,17 +115,6 @@ function fillCrossword(guess) {
   });
 }
 
-(guess) {
-  window.crossLayout.forEach(entry => {
-    if (entry.word === guess) {
-      entry.word.split('').forEach((_, j) => {
-        const cell = document.getElementById(`cell-${entry.rowStart+j}-${entry.col}`);
-        if (cell) cell.classList.add('filled');
-      });
-    }
-  });
-}
-
 function validateMultiset(w, base) {
   const tmp = base.toUpperCase().split('');
   for (const ch of w.toUpperCase()) {
