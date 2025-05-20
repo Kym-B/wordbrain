@@ -10,10 +10,13 @@
     .letter { width: 50px; height: 50px; border: 2px solid #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
     #found-words { margin-top: 20px; }
     #message { margin-top: 10px; height: 1.2em; }
+    #file-input { margin-bottom: 20px; }
   </style>
 </head>
 <body>
   <h1>Word Puzzle POC</h1>
+  <!-- File import for word lists -->
+  <input type="file" id="file-input" accept=".txt,.csv" />
   <div class="letters" id="letters"></div>
   <input type="text" id="word-input" placeholder="Enter word" />
   <button id="submit-btn">Submit</button>
@@ -23,11 +26,14 @@
     <h2>Found Words:</h2>
     <ul id="words-list"></ul>
   </div>
+
   <script>
+    // Default letters and word list
     const letters = ['C','A','T','E','R'];
-    const validWords = ['cat','cater','crate','trace','react','eat','tea'];
+    let validWords = ['cat','cater','crate','trace','react','eat','tea'];
     let foundWords = [];
 
+    // Display the letter tiles
     function displayLetters() {
       const container = document.getElementById('letters');
       container.innerHTML = '';
@@ -39,6 +45,7 @@
       });
     }
 
+    // Shuffle helper
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -46,30 +53,58 @@
       }
     }
 
+    // File import handler
+    document.getElementById('file-input').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const text = evt.target.result;
+        let words = [];
+        if (file.name.endsWith('.csv')) {
+          // Split on commas and newlines
+          words = text.split(/[,\r?\n]+/);
+        } else {
+          // .txt: assume one word per line
+          words = text.split(/\r?\n/);
+        }
+        // Clean and filter
+        validWords = words.map(w => w.trim().toLowerCase()).filter(w => w);
+        foundWords = [];
+        updateFoundWords();
+        document.getElementById('message').textContent = `Loaded ${validWords.length} words from ${file.name}`;
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+
+    // Submission handler
     document.getElementById('submit-btn').addEventListener('click', () => {
-      const input = document.getElementById('word-input');
-      const word = input.value.toLowerCase();
-      const message = document.getElementById('message');
+      const inputEl = document.getElementById('word-input');
+      const word = inputEl.value.trim().toLowerCase();
+      const messageEl = document.getElementById('message');
       if (!word) return;
       if (!validateLetters(word)) {
-        message.textContent = 'Invalid letters!';
+        messageEl.textContent = 'Invalid letters!';
       } else if (!validWords.includes(word)) {
-        message.textContent = 'Not in list!';
+        messageEl.textContent = 'Not in list!';
       } else if (foundWords.includes(word)) {
-        message.textContent = 'Already found!';
+        messageEl.textContent = 'Already found!';
       } else {
         foundWords.push(word);
         updateFoundWords();
-        message.textContent = 'Good job!';
+        messageEl.textContent = 'Good job!';
       }
-      input.value = '';
+      inputEl.value = '';
     });
 
+    // Shuffle button
     document.getElementById('shuffle-btn').addEventListener('click', () => {
       shuffle(letters);
       displayLetters();
     });
 
+    // Letter validation
     function validateLetters(word) {
       const temp = [...letters];
       for (let char of word) {
@@ -80,6 +115,7 @@
       return true;
     }
 
+    // Update displayed found words
     function updateFoundWords() {
       const list = document.getElementById('words-list');
       list.innerHTML = '';
@@ -90,6 +126,7 @@
       });
     }
 
+    // Initial render
     displayLetters();
   </script>
 </body>
