@@ -69,6 +69,8 @@ function initPuzzle() {
 }
 
 function buildCrossword(main, words) {
+  console.log('buildCrossword:', main, words);
+  const cw=document.getElementById('crossword'); cw.innerHTML = '';
   const cw = document.getElementById('crossword');
   cw.innerHTML = '';
   const width = main.length;
