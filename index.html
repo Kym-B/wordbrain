@@ -7,7 +7,7 @@
 <style>
   body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; display: flex; flex-direction: column; align-items: center; padding: 40px; color: #333; }
   h1 { margin-bottom: 20px; font-size: 2rem; }
-  #level-info, #score, #multiplier { font-size: 1.2rem; margin-bottom: 10px; }
+  #level-info, #score, #multiplier, #words-left { font-size: 1.2rem; margin-bottom: 10px; }
   .blanks-container { display: flex; gap: 8px; margin-bottom: 20px; }
   .blank { width: 40px; height: 40px; border-bottom: 3px solid #4a90e2; text-align: center; font-size: 1.5rem; font-weight: bold; line-height: 40px; color: transparent; }
   .dial-container { position: relative; width: 280px; height: 280px; margin: 40px 0; }
@@ -31,25 +31,21 @@
   <div id="level-info">Level 1: words up to 4 letters (Rounds left: 4)</div>
   <div id="score">Score: 0</div>
   <div id="multiplier">Multiplier: 1x</div>
-
+  <div id="words-left">Words left: 0</div>
   <div class="blanks-container" id="blanks"></div>
   <div class="dial-container"><div class="letters" id="letters"></div></div>
-
   <div class="controls">
     <input type="text" id="word-input" placeholder="Tap letters or type" />
     <button id="submit-btn">Submit</button>
     <button id="shuffle-btn">Shuffle</button>
     <button id="clear-btn">Clear</button>
   </div>
-
   <input type="file" id="file-input" accept=".txt,.csv" />
   <div id="message"></div>
-
   <div id="found-words">
     <h2>Found Words:</h2>
     <ul id="words-list"></ul>
   </div>
-
 <script>
 // LEVEL CONFIG: modify levels and rounds as desired
 const levelsConfig = [
@@ -60,15 +56,21 @@ const levelsConfig = [
 ];
 
 let validWords = [], currentWord = '', letters = [], foundWords = [], score = 0, multiplier = 1.0;
+let currentPossibleWords = [], wordsLeft = 0;
 let currentLevel = 0, roundsLeft = levelsConfig[0].rounds;
 const radius = 120;
 
 function initPuzzle() {
   if (!validWords.length) return;
+  // compute currentPossibleWords based on currentWord letters after selection
+  // select main word pool by level
   const { maxLength } = levelsConfig[currentLevel];
-  // filter words by maxLength
   const pool = validWords.filter(w => w.length <= maxLength);
   currentWord = pool[Math.floor(Math.random() * pool.length)];
+  // possible words using multiset of currentWord
+  currentPossibleWords = validWords.filter(w => w.length >= 2 && validateLettersMultiset(w, currentWord));
+  wordsLeft = currentPossibleWords.length;
+  updateWordsLeft();
 
   renderBlanks();
   letters = shuffleArray(currentWord.toUpperCase().split(''));
@@ -78,14 +80,16 @@ function initPuzzle() {
 
 function updateLevelInfo() {
   const lvl = currentLevel + 1;
-  const { maxLength, rounds } = levelsConfig[currentLevel];
+  const { maxLength } = levelsConfig[currentLevel];
   document.getElementById('level-info').textContent =
     `Level ${lvl}: words up to ${maxLength} letters (Rounds left: ${roundsLeft})`;
 }
 
 function renderBlanks() {
   const blanks = document.getElementById('blanks'); blanks.innerHTML = '';
-  [...currentWord].forEach(() => { const span = document.createElement('span'); span.className = 'blank'; blanks.appendChild(span); });
+  [...currentWord].forEach(() => {
+    const span = document.createElement('span'); span.className = 'blank'; blanks.appendChild(span);
+  });
 }
 
 function displayLetters() {
@@ -95,8 +99,7 @@ function displayLetters() {
     const rad = angle * Math.PI / 180;
     const x = Math.cos(rad) * radius;
     const y = Math.sin(rad) * radius;
-    const div = document.createElement('div');
-    div.className = 'letter'; div.textContent = ltr;
+    const div = document.createElement('div'); div.className = 'letter'; div.textContent = ltr;
     div.style.left = `calc(50% + ${x}px - 30px)`;
     div.style.top = `calc(50% + ${y}px - 30px)`;
     div.style.animationDelay = `${i * 0.05}s`;
@@ -109,9 +112,22 @@ function shuffleArray(arr) { return arr.sort(() => Math.random() - 0.5); }
 
 function updateScore() { document.getElementById('score').textContent = `Score: ${score}`; }
 function updateMultiplier() { document.getElementById('multiplier').textContent = `Multiplier: ${multiplier.toFixed(1)}x`; }
+function updateWordsLeft() { document.getElementById('words-left').textContent = `Words left: ${wordsLeft}`; }
 function updateFoundWords() {
   const list = document.getElementById('words-list'); list.innerHTML = '';
-  foundWords.forEach(({word, points}) => { const li = document.createElement('li'); li.textContent = `${word} - ${points}`; list.appendChild(li); });
+  foundWords.forEach(({word, points}) => {
+    const li = document.createElement('li'); li.textContent = `${word} - ${points}`; list.appendChild(li);
+  });
+}
+
+function validateLettersMultiset(word, base) {
+  const temp = base.toUpperCase().split('');
+  for (let char of word.toUpperCase()) {
+    const idx = temp.indexOf(char);
+    if (idx === -1) return false;
+    temp.splice(idx, 1);
+  }
+  return true;
 }
 
 function validateLetters(word) {
@@ -124,20 +140,13 @@ function validateLetters(word) {
   return true;
 }
 
-// Enter key submits
 const inputEl = document.getElementById('word-input');
 inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('submit-btn').click(); } });
 
-// Button handlers
-
-// Shuffle dial
 document.getElementById('shuffle-btn').onclick = () => { letters = shuffleArray(letters); displayLetters(); inputEl.value = ''; };
-// Clear input
 document.getElementById('clear-btn').onclick = () => inputEl.value = '';
-// Submit word
 document.getElementById('submit-btn').onclick = () => {
-  const guess = inputEl.value.trim().toLowerCase();
-  const msg = document.getElementById('message');
+  const guess = inputEl.value.trim().toLowerCase(); const msg = document.getElementById('message');
   if (!guess) return;
   if (!validateLetters(guess)) { msg.textContent = 'Invalid letters!'; }
   else if (!validWords.includes(guess)) { msg.textContent = 'Not in word list!'; }
@@ -145,29 +154,18 @@ document.getElementById('submit-btn').onclick = () => {
   else {
     const basePoints = guess.length * 10;
     const pts = Math.round(basePoints * multiplier);
-    score += pts; updateScore();
-    multiplier += 0.1; updateMultiplier();
+    score += pts; updateScore(); multiplier += 0.1; updateMultiplier();
     foundWords.push({word: guess, points: pts}); updateFoundWords();
+    wordsLeft--; updateWordsLeft();
     msg.textContent = `+${pts}!`;
-    // if main word solved, advance round/level
     if (guess === currentWord) {
-      document.querySelectorAll('.blank').forEach((span,i) => {
-        span.textContent = currentWord[i].toUpperCase(); span.style.color = '#4a90e2';
-      });
-      // decrement rounds left
-      roundsLeft--;
-      if (roundsLeft <= 0 && currentLevel < levelsConfig.length - 1) {
-        currentLevel++;
-        roundsLeft = levelsConfig[currentLevel].rounds;
-      }
-      // next puzzle
+      document.querySelectorAll('.blank').forEach((span,i) => { span.textContent = currentWord[i].toUpperCase(); span.style.color = '#4a90e2'; });
+      roundsLeft--; if (roundsLeft <= 0 && currentLevel < levelsConfig.length - 1) { currentLevel++; roundsLeft = levelsConfig[currentLevel].rounds; }
       setTimeout(initPuzzle, 1000);
     }
   }
   inputEl.value = '';
 };
-
-// File load
 
 document.getElementById('file-input').onchange = e => {
   const file = e.target.files[0]; if (!file) return;
