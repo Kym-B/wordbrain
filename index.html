@@ -7,18 +7,12 @@
 <style>
   body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; display: flex; flex-direction: column; align-items: center; padding: 40px; color: #333; }
   h1 { margin-bottom: 20px; font-size: 2rem; }
+  #level-info, #score, #multiplier { font-size: 1.2rem; margin-bottom: 10px; }
   .blanks-container { display: flex; gap: 8px; margin-bottom: 20px; }
   .blank { width: 40px; height: 40px; border-bottom: 3px solid #4a90e2; text-align: center; font-size: 1.5rem; font-weight: bold; line-height: 40px; color: transparent; }
-  #score, #multiplier { font-size: 1.2rem; margin-bottom: 10px; }
   .dial-container { position: relative; width: 280px; height: 280px; margin: 40px 0; }
   .letters { position: relative; width: 100%; height: 100%; }
-  .letter {
-    position: absolute; width: 60px; height: 60px; background: linear-gradient(145deg, #ffffff, #e6e9ef);
-    border: 2px solid #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    font-size: 1.5rem; font-weight: 600; color: #4a90e2; cursor: pointer;
-    transform: scale(0);
-    animation: pop 0.5s ease-out forwards;
-  }
+  .letter { position: absolute; width: 60px; height: 60px; background: linear-gradient(145deg, #ffffff, #e6e9ef); border: 2px solid #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 600; color: #4a90e2; cursor: pointer; transform: scale(0); animation: pop 0.5s ease-out forwards; }
   .letter:hover { animation: bounce 0.4s ease; }
   .controls { display: flex; gap: 10px; margin: 20px 0 10px; }
   .controls input[type='text'] { padding: 12px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; width: 200px; }
@@ -28,39 +22,65 @@
   #found-words h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
   #found-words ul { list-style: none; padding-left: 0; max-height: 150px; overflow-y: auto; }
   #found-words li { padding: 4px 0; border-bottom: 1px solid #f0f0f0; }
-
   @keyframes pop { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
   @keyframes bounce { 0%,100% { transform: scale(1) translateY(0); } 50% { transform: scale(1) translateY(-8px); } }
 </style>
 </head>
 <body>
   <h1>Wordbrains</h1>
-  <div class="blanks-container" id="blanks"></div>
+  <div id="level-info">Level 1: words up to 4 letters (Rounds left: 4)</div>
   <div id="score">Score: 0</div>
   <div id="multiplier">Multiplier: 1x</div>
+
+  <div class="blanks-container" id="blanks"></div>
   <div class="dial-container"><div class="letters" id="letters"></div></div>
+
   <div class="controls">
     <input type="text" id="word-input" placeholder="Tap letters or type" />
     <button id="submit-btn">Submit</button>
     <button id="shuffle-btn">Shuffle</button>
     <button id="clear-btn">Clear</button>
   </div>
+
   <input type="file" id="file-input" accept=".txt,.csv" />
   <div id="message"></div>
+
   <div id="found-words">
     <h2>Found Words:</h2>
     <ul id="words-list"></ul>
   </div>
+
 <script>
+// LEVEL CONFIG: modify levels and rounds as desired
+const levelsConfig = [
+  { maxLength: 4, rounds: 4 },
+  { maxLength: 5, rounds: 5 },
+  { maxLength: 6, rounds: 6 },
+  // ... continue up to round 15
+];
+
 let validWords = [], currentWord = '', letters = [], foundWords = [], score = 0, multiplier = 1.0;
+let currentLevel = 0, roundsLeft = levelsConfig[0].rounds;
 const radius = 120;
 
 function initPuzzle() {
   if (!validWords.length) return;
-  currentWord = validWords[Math.floor(Math.random() * validWords.length)];
-  renderBlanks(); letters = shuffleArray(currentWord.toUpperCase().split(''));
-  displayLetters(); foundWords = []; score = 0; multiplier = 1.0;
-  updateScore(); updateMultiplier(); updateFoundWords(); document.getElementById('message').textContent = '';
+  const { maxLength } = levelsConfig[currentLevel];
+  // filter words by maxLength
+  const pool = validWords.filter(w => w.length <= maxLength);
+  currentWord = pool[Math.floor(Math.random() * pool.length)];
+
+  renderBlanks();
+  letters = shuffleArray(currentWord.toUpperCase().split(''));
+  displayLetters();
+  updateLevelInfo();
+}
+
+function updateLevelInfo() {
+  const lvl = currentLevel + 1;
+  const { maxLength, rounds } = levelsConfig[currentLevel];
+  document.getElementById('level-info').textContent =
+    `Level ${lvl}: words up to ${maxLength} letters (Rounds left: ${roundsLeft})`;
 }
 
 function renderBlanks() {
@@ -75,11 +95,12 @@ function displayLetters() {
     const rad = angle * Math.PI / 180;
     const x = Math.cos(rad) * radius;
     const y = Math.sin(rad) * radius;
-    const div = document.createElement('div'); div.className = 'letter'; div.textContent = ltr;
+    const div = document.createElement('div');
+    div.className = 'letter'; div.textContent = ltr;
     div.style.left = `calc(50% + ${x}px - 30px)`;
     div.style.top = `calc(50% + ${y}px - 30px)`;
     div.style.animationDelay = `${i * 0.05}s`;
-    div.addEventListener('click', () => { document.getElementById('word-input').value += ltr.toLowerCase(); });
+    div.addEventListener('click', () => document.getElementById('word-input').value += ltr.toLowerCase());
     container.appendChild(div);
   });
 }
@@ -88,7 +109,6 @@ function shuffleArray(arr) { return arr.sort(() => Math.random() - 0.5); }
 
 function updateScore() { document.getElementById('score').textContent = `Score: ${score}`; }
 function updateMultiplier() { document.getElementById('multiplier').textContent = `Multiplier: ${multiplier.toFixed(1)}x`; }
-
 function updateFoundWords() {
   const list = document.getElementById('words-list'); list.innerHTML = '';
   foundWords.forEach(({word, points}) => { const li = document.createElement('li'); li.textContent = `${word} - ${points}`; list.appendChild(li); });
@@ -96,40 +116,55 @@ function updateFoundWords() {
 
 function validateLetters(word) {
   const temp = [...letters];
-  for (let char of word.toUpperCase()) { const idx = temp.indexOf(char); if (idx === -1) return false; temp.splice(idx,1); }
+  for (let char of word.toUpperCase()) {
+    const idx = temp.indexOf(char);
+    if (idx === -1) return false;
+    temp.splice(idx,1);
+  }
   return true;
 }
 
-// Add Enter key submit
+// Enter key submits
 const inputEl = document.getElementById('word-input');
-inputEl.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    document.getElementById('submit-btn').click();
-  }
-});
+inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('submit-btn').click(); } });
 
-// Handlers
+// Button handlers
 
-document.getElementById('shuffle-btn').onclick = () => { letters = shuffleArray(letters); displayLetters(); document.getElementById('word-input').value = ''; };
-document.getElementById('clear-btn').onclick = () => { document.getElementById('word-input').value = ''; };
+// Shuffle dial
+document.getElementById('shuffle-btn').onclick = () => { letters = shuffleArray(letters); displayLetters(); inputEl.value = ''; };
+// Clear input
+document.getElementById('clear-btn').onclick = () => inputEl.value = '';
+// Submit word
 document.getElementById('submit-btn').onclick = () => {
-  const el = document.getElementById('word-input'); const guess = el.value.trim().toLowerCase(); const msg = document.getElementById('message');
+  const guess = inputEl.value.trim().toLowerCase();
+  const msg = document.getElementById('message');
   if (!guess) return;
   if (!validateLetters(guess)) { msg.textContent = 'Invalid letters!'; }
   else if (!validWords.includes(guess)) { msg.textContent = 'Not in word list!'; }
   else if (foundWords.some(e => e.word === guess)) { msg.textContent = 'Already found!'; }
   else {
-    let basePoints = guess.length * 10;
-    let pts = Math.round(basePoints * multiplier);
+    const basePoints = guess.length * 10;
+    const pts = Math.round(basePoints * multiplier);
     score += pts; updateScore();
-    foundWords.push({word: guess, points: pts}); updateFoundWords(); msg.textContent = `+${pts}!`;
     multiplier += 0.1; updateMultiplier();
+    foundWords.push({word: guess, points: pts}); updateFoundWords();
+    msg.textContent = `+${pts}!`;
+    // if main word solved, advance round/level
     if (guess === currentWord) {
-      document.querySelectorAll('.blank').forEach((span,i) => { span.textContent = currentWord[i].toUpperCase(); span.style.color = '#4a90e2'; });
+      document.querySelectorAll('.blank').forEach((span,i) => {
+        span.textContent = currentWord[i].toUpperCase(); span.style.color = '#4a90e2';
+      });
+      // decrement rounds left
+      roundsLeft--;
+      if (roundsLeft <= 0 && currentLevel < levelsConfig.length - 1) {
+        currentLevel++;
+        roundsLeft = levelsConfig[currentLevel].rounds;
+      }
+      // next puzzle
+      setTimeout(initPuzzle, 1000);
     }
   }
-  el.value = '';
+  inputEl.value = '';
 };
 
 // File load
@@ -138,13 +173,15 @@ document.getElementById('file-input').onchange = e => {
   const file = e.target.files[0]; if (!file) return;
   const reader = new FileReader(); reader.onload = evt => {
     validWords = evt.target.result.split(/[\r?\n,]+/).map(w => w.trim().toLowerCase()).filter(w => w);
+    currentLevel = 0; roundsLeft = levelsConfig[0].rounds;
     initPuzzle(); document.getElementById('message').textContent = `Loaded ${validWords.length} words`;
   };
   reader.readAsText(file); e.target.value = '';
 };
 
-// Init
+// Initial words
 validWords = ['cater','react','trace','crate','eat','tea','cat','act'];
+roundsLeft = levelsConfig[0].rounds;
 initPuzzle();
 </script>
 </body>
