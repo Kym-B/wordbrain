@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word Puzzle POC</title>
+  <style>
+    body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; margin-top: 50px; }
+    .letters { display: flex; gap: 10px; margin-bottom: 20px; }
+    .letter { width: 50px; height: 50px; border: 2px solid #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    #found-words { margin-top: 20px; }
+    #message { margin-top: 10px; height: 1.2em; }
+  </style>
+</head>
+<body>
+  <h1>Word Puzzle POC</h1>
+  <div class="letters" id="letters"></div>
+  <input type="text" id="word-input" placeholder="Enter word" />
+  <button id="submit-btn">Submit</button>
+  <button id="shuffle-btn">Shuffle</button>
+  <div id="message"></div>
+  <div id="found-words">
+    <h2>Found Words:</h2>
+    <ul id="words-list"></ul>
+  </div>
+  <script>
+    const letters = ['C','A','T','E','R'];
+    const validWords = ['cat','cater','crate','trace','react','eat','tea'];
+    let foundWords = [];
+
+    function displayLetters() {
+      const container = document.getElementById('letters');
+      container.innerHTML = '';
+      letters.forEach(letter => {
+        const div = document.createElement('div');
+        div.className = 'letter';
+        div.textContent = letter;
+        container.appendChild(div);
+      });
+    }
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    document.getElementById('submit-btn').addEventListener('click', () => {
+      const input = document.getElementById('word-input');
+      const word = input.value.toLowerCase();
+      const message = document.getElementById('message');
+      if (!word) return;
+      if (!validateLetters(word)) {
+        message.textContent = 'Invalid letters!';
+      } else if (!validWords.includes(word)) {
+        message.textContent = 'Not in list!';
+      } else if (foundWords.includes(word)) {
+        message.textContent = 'Already found!';
+      } else {
+        foundWords.push(word);
+        updateFoundWords();
+        message.textContent = 'Good job!';
+      }
+      input.value = '';
+    });
+
+    document.getElementById('shuffle-btn').addEventListener('click', () => {
+      shuffle(letters);
+      displayLetters();
+    });
+
+    function validateLetters(word) {
+      const temp = [...letters];
+      for (let char of word) {
+        const idx = temp.indexOf(char.toUpperCase());
+        if (idx === -1) return false;
+        temp.splice(idx, 1);
+      }
+      return true;
+    }
+
+    function updateFoundWords() {
+      const list = document.getElementById('words-list');
+      list.innerHTML = '';
+      foundWords.forEach(w => {
+        const li = document.createElement('li');
+        li.textContent = w;
+        list.appendChild(li);
+      });
+    }
+
+    displayLetters();
+  </script>
+</body>
+</html>
