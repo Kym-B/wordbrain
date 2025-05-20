@@ -72,7 +72,6 @@ function initPuzzle() {
 }
 
 function buildCrossword(main, words) {
-  // clear and set up crossword grid
   const cw = document.getElementById('crossword');
   cw.innerHTML = '';
   const width = main.length;
@@ -87,21 +86,36 @@ function buildCrossword(main, words) {
       cw.appendChild(cell);
     }
   }
-  // store layout and place vertical words
+  // store layout and assign hidden letters
   window.crossLayout = [];
   words.forEach(w => {
     const intersectChar = w.split('').find(ch => main.includes(ch));
     const col = main.indexOf(intersectChar);
-    // place letters vertically
     w.split('').forEach((ch, j) => {
       const cell = document.getElementById(`cell-${j+1}-${col}`);
-      if (cell) cell.textContent = ch.toUpperCase();
+      if (cell) {
+        cell.dataset.char = ch.toUpperCase();
+      }
     });
     window.crossLayout.push({ word: w, rowStart: 1, col });
   });
 }
 
 function fillCrossword(guess) {
+  window.crossLayout.forEach(entry => {
+    if (entry.word === guess) {
+      entry.word.split('').forEach((_, j) => {
+        const cell = document.getElementById(`cell-${entry.rowStart+j}-${entry.col}`);
+        if (cell) {
+          cell.textContent = cell.dataset.char;
+          cell.classList.add('filled');
+        }
+      });
+    }
+  });
+}
+
+(guess) {
   window.crossLayout.forEach(entry => {
     if (entry.word === guess) {
       entry.word.split('').forEach((_, j) => {
