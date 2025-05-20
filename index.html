@@ -19,14 +19,29 @@
       font-size: 2rem;
       animation: fadeInTitle 0.6s ease-out;
     }
+    .blanks-container {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .blank {
+      width: 40px;
+      height: 40px;
+      border-bottom: 3px solid #4a90e2;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      line-height: 40px;
+      color: transparent;
+    }
     .dial-container {
       position: relative;
       width: 280px;
       height: 140px;
       overflow: visible;
       margin: 40px 0;
-      opacity: 0;
       animation: fadeIn 0.6s ease-out 0.4s forwards;
+      opacity: 0;
     }
     .letters {
       position: relative;
@@ -49,7 +64,7 @@
       box-shadow: 2px 2px 5px rgba(0,0,0,0.1), -2px -2px 5px rgba(255,255,255,0.7);
       user-select: none;
       cursor: pointer;
-      transform: none; /* reset base transform */
+      transform: none;
       animation: pop 0.5s ease-out forwards;
     }
     .letter:hover {
@@ -59,8 +74,8 @@
       display: flex;
       gap: 10px;
       margin: 20px 0 10px;
-      opacity: 0;
       animation: fadeIn 0.6s ease-out 0.6s forwards;
+      opacity: 0;
     }
     .controls input[type="text"] {
       padding: 12px;
@@ -86,15 +101,15 @@
     }
     #file-input {
       margin: 20px 0;
-      opacity: 0;
       animation: fadeIn 0.6s ease-out 0.8s forwards;
+      opacity: 0;
     }
     #message {
       height: 1.2em;
       margin-bottom: 10px;
       font-style: italic;
-      opacity: 0;
       animation: fadeIn 0.6s ease-out 1s forwards;
+      opacity: 0;
     }
     #found-words {
       width: 280px;
@@ -102,8 +117,8 @@
       padding: 15px;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      opacity: 0;
       animation: fadeIn 0.6s ease-out 1.2s forwards;
+      opacity: 0;
     }
     #found-words h2 {
       margin-top: 0;
@@ -120,19 +135,18 @@
     #found-words li {
       padding: 4px 0;
       border-bottom: 1px solid #f0f0f0;
-      opacity: 0;
       animation: fadeIn 0.4s ease-out forwards;
+      opacity: 0;
     }
 
-    /* Animations */
     @keyframes pop {
       0% { transform: scale(0); }
       80% { transform: scale(1.2); }
       100% { transform: scale(1); }
     }
     @keyframes bounce {
-      0%, 100% { transform: scale(1) translateY(0); }
-      50% { transform: scale(1) translateY(-10px); }
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
     }
     @keyframes fadeIn {
       0% { opacity: 0; }
@@ -146,32 +160,48 @@
 </head>
 <body>
   <h1>Wordbrains</h1>
-
+  <div class="blanks-container" id="blanks"></div>
   <div class="dial-container">
     <div class="letters" id="letters"></div>
   </div>
-
   <div class="controls">
     <input type="text" id="word-input" placeholder="Tap letters or type" />
     <button id="submit-btn">Submit</button>
     <button id="shuffle-btn">Shuffle</button>
     <button id="clear-btn">Clear</button>
   </div>
-
   <input type="file" id="file-input" accept=".txt,.csv" />
-
   <div id="message"></div>
-
   <div id="found-words">
     <h2>Found Words:</h2>
     <ul id="words-list"></ul>
   </div>
-
   <script>
-    const letters = ['C','A','T','E','R'];
-    let validWords = ['cat','cater','crate','trace','react','eat','tea'];
+    let validWords = [];
+    let currentWord = '';
+    let letters = [];
     let foundWords = [];
+
     const radius = 100;
+
+    function initPuzzle() {
+      if (validWords.length === 0) return;
+      // pick random word
+      currentWord = validWords[Math.floor(Math.random() * validWords.length)];
+      // setup blanks
+      const blanks = document.getElementById('blanks');
+      blanks.innerHTML = '';
+      for (let i = 0; i < currentWord.length; i++) {
+        const span = document.createElement('span');
+        span.className = 'blank';
+        blanks.appendChild(span);
+      }
+      // setup dial letters
+      letters = currentWord.toUpperCase().split('');
+      displayLetters();
+      foundWords = [];
+      updateFoundWords();
+    }
 
     function displayLetters() {
       const container = document.getElementById('letters');
@@ -195,86 +225,58 @@
       }
     }
 
-    function shuffle(array) {
-      for (let i = array.length - 1; i > 0; i--) {
+    function shuffleDial() {
+      for (let i = letters.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+        [letters[i], letters[j]] = [letters[j], letters[i]];
       }
-    }
-
-    document.getElementById('shuffle-btn').addEventListener('click', () => {
-      shuffle(letters);
       displayLetters();
       document.getElementById('word-input').value = '';
-    });
+    }
 
+    document.getElementById('shuffle-btn').addEventListener('click', shuffleDial);
     document.getElementById('clear-btn').addEventListener('click', () => {
       document.getElementById('word-input').value = '';
     });
-
     document.getElementById('submit-btn').addEventListener('click', () => {
       const inputEl = document.getElementById('word-input');
       const word = inputEl.value.trim().toLowerCase();
       const messageEl = document.getElementById('message');
       if (!word) return;
-      if (!validateLetters(word)) {
-        messageEl.textContent = 'Invalid letters!';
-      } else if (!validWords.includes(word)) {
-        messageEl.textContent = 'Not in list!';
-      } else if (foundWords.includes(word)) {
-        messageEl.textContent = 'Already found!';
+      if (word === currentWord) {
+        messageEl.textContent = 'Correct!';
+        // reveal blanks
+        const spans = document.querySelectorAll('.blank');
+        spans.forEach((span, i) => {
+          span.textContent = currentWord[i].toUpperCase();
+          span.style.color = '#4a90e2';
+        });
       } else {
-        foundWords.push(word);
-        updateFoundWords();
-        messageEl.textContent = 'Good job!';
+        messageEl.textContent = 'Try again!';
       }
       inputEl.value = '';
     });
-
-    document.getElementById('file-input').addEventListener('change', (e) => {
+    document.getElementById('file-input').addEventListener('change', e => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = (evt) => {
+      reader.onload = evt => {
         const text = evt.target.result;
-        let words = [];
         if (file.name.endsWith('.csv')) {
-          words = text.split(/[\r\n,]+/);
+          validWords = text.split(/[,\r?\n]+/).map(w => w.trim().toLowerCase()).filter(w => w);
         } else {
-          words = text.split(/\r?\n/);
+          validWords = text.split(/\r?\n/).map(w => w.trim().toLowerCase()).filter(w => w);
         }
-        validWords = words.map(w => w.trim().toLowerCase()).filter(w => w);
-        foundWords = [];
-        updateFoundWords();
-        document.getElementById('message').textContent = `Loaded ${validWords.length} words from ${file.name}`;
+        initPuzzle();
+        document.getElementById('message').textContent = `Loaded ${validWords.length} words`;
       };
       reader.readAsText(file);
       e.target.value = '';
     });
 
-    function validateLetters(word) {
-      const temp = [...letters];
-      for (let char of word) {
-        const idx = temp.indexOf(char.toUpperCase());
-        if (idx === -1) return false;
-        temp.splice(idx, 1);
-      }
-      return true;
-    }
-
-    function updateFoundWords() {
-      const list = document.getElementById('words-list');
-      list.innerHTML = '';
-      foundWords.forEach((w, idx) => {
-        const li = document.createElement('li');
-        li.textContent = w;
-        li.style.animationDelay = `${idx * 0.1}s`;
-        list.appendChild(li);
-      });
-    }
-
-    // Initial render
-    displayLetters();
+    // Initial placeholder word
+    validWords = ['cater','react','trace','crate'];
+    initPuzzle();
   </script>
 </body>
 </html>
