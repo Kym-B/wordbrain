@@ -37,8 +37,7 @@
     .dial-container {
       position: relative;
       width: 280px;
-      height: 140px;
-      overflow: visible;
+      height: 280px;
       margin: 40px 0;
       animation: fadeIn 0.6s ease-out 0.4s forwards;
       opacity: 0;
@@ -181,26 +180,26 @@
     let currentWord = '';
     let letters = [];
     let foundWords = [];
-
-    const radius = 100;
+    const radius = 120; // adjust for full circle
 
     function initPuzzle() {
-      if (validWords.length === 0) return;
-      // pick random word
+      if (!validWords.length) return;
       currentWord = validWords[Math.floor(Math.random() * validWords.length)];
-      // setup blanks
-      const blanks = document.getElementById('blanks');
-      blanks.innerHTML = '';
-      for (let i = 0; i < currentWord.length; i++) {
-        const span = document.createElement('span');
-        span.className = 'blank';
-        blanks.appendChild(span);
-      }
-      // setup dial letters
-      letters = currentWord.toUpperCase().split('');
+      renderBlanks();
+      letters = shuffleArray(currentWord.toUpperCase().split(''));
       displayLetters();
       foundWords = [];
       updateFoundWords();
+    }
+
+    function renderBlanks() {
+      const blanks = document.getElementById('blanks');
+      blanks.innerHTML = '';
+      [...currentWord].forEach(() => {
+        const span = document.createElement('span');
+        span.className = 'blank';
+        blanks.appendChild(span);
+      });
     }
 
     function displayLetters() {
@@ -208,8 +207,8 @@
       container.innerHTML = '';
       const N = letters.length;
       for (let i = 0; i < N; i++) {
-        const angle = (180 / (N - 1)) * i - 90;
-        const rad = angle * (Math.PI / 180);
+        const angle = (360 / N) * i - 90;
+        const rad = angle * Math.PI / 180;
         const x = Math.cos(rad) * radius;
         const y = Math.sin(rad) * radius;
         const div = document.createElement('div');
@@ -217,7 +216,7 @@
         div.textContent = letters[i];
         div.style.left = `calc(50% + ${x}px - 30px)`;
         div.style.top = `calc(50% + ${y}px - 30px)`;
-        div.style.animationDelay = `${i * 0.1}s`;
+        div.style.animationDelay = `${i * 0.05}s`;
         div.addEventListener('click', () => {
           document.getElementById('word-input').value += letters[i].toLowerCase();
         });
@@ -225,29 +224,27 @@
       }
     }
 
-    function shuffleDial() {
-      for (let i = letters.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [letters[i], letters[j]] = [letters[j], letters[i]];
-      }
-      displayLetters();
-      document.getElementById('word-input').value = '';
+    function shuffleArray(arr) {
+      return arr.sort(() => Math.random() - 0.5);
     }
 
-    document.getElementById('shuffle-btn').addEventListener('click', shuffleDial);
+    document.getElementById('shuffle-btn').addEventListener('click', () => {
+      letters = shuffleArray(letters);
+      displayLetters();
+      document.getElementById('word-input').value = '';
+    });
+
     document.getElementById('clear-btn').addEventListener('click', () => {
       document.getElementById('word-input').value = '';
     });
+
     document.getElementById('submit-btn').addEventListener('click', () => {
       const inputEl = document.getElementById('word-input');
-      const word = inputEl.value.trim().toLowerCase();
+      const guess = inputEl.value.trim().toLowerCase();
       const messageEl = document.getElementById('message');
-      if (!word) return;
-      if (word === currentWord) {
+      if (guess === currentWord) {
         messageEl.textContent = 'Correct!';
-        // reveal blanks
-        const spans = document.querySelectorAll('.blank');
-        spans.forEach((span, i) => {
+        document.querySelectorAll('.blank').forEach((span, i) => {
           span.textContent = currentWord[i].toUpperCase();
           span.style.color = '#4a90e2';
         });
@@ -256,17 +253,14 @@
       }
       inputEl.value = '';
     });
+
     document.getElementById('file-input').addEventListener('change', e => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = evt => {
         const text = evt.target.result;
-        if (file.name.endsWith('.csv')) {
-          validWords = text.split(/[,\r?\n]+/).map(w => w.trim().toLowerCase()).filter(w => w);
-        } else {
-          validWords = text.split(/\r?\n/).map(w => w.trim().toLowerCase()).filter(w => w);
-        }
+        validWords = text.split(/[\r?\n,]+/).map(w => w.trim().toLowerCase()).filter(w => w);
         initPuzzle();
         document.getElementById('message').textContent = `Loaded ${validWords.length} words`;
       };
@@ -274,7 +268,7 @@
       e.target.value = '';
     });
 
-    // Initial placeholder word
+    // Initial placeholder
     validWords = ['cater','react','trace','crate'];
     initPuzzle();
   </script>
