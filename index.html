@@ -100,12 +100,21 @@ function validateLetters(word) {
   return true;
 }
 
+// Add Enter key submit
+const inputEl = document.getElementById('word-input');
+inputEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('submit-btn').click();
+  }
+});
+
 // Handlers
 
 document.getElementById('shuffle-btn').onclick = () => { letters = shuffleArray(letters); displayLetters(); document.getElementById('word-input').value = ''; };
 document.getElementById('clear-btn').onclick = () => { document.getElementById('word-input').value = ''; };
 document.getElementById('submit-btn').onclick = () => {
-  const inputEl = document.getElementById('word-input'); const guess = inputEl.value.trim().toLowerCase(); const msg = document.getElementById('message');
+  const el = document.getElementById('word-input'); const guess = el.value.trim().toLowerCase(); const msg = document.getElementById('message');
   if (!guess) return;
   if (!validateLetters(guess)) { msg.textContent = 'Invalid letters!'; }
   else if (!validWords.includes(guess)) { msg.textContent = 'Not in word list!'; }
@@ -114,15 +123,13 @@ document.getElementById('submit-btn').onclick = () => {
     let basePoints = guess.length * 10;
     let pts = Math.round(basePoints * multiplier);
     score += pts; updateScore();
-    foundWords.push({word: guess, points: pts}); updateFoundWords();
-    msg.textContent = `+${pts}!`;
-    // increase multiplier
+    foundWords.push({word: guess, points: pts}); updateFoundWords(); msg.textContent = `+${pts}!`;
     multiplier += 0.1; updateMultiplier();
     if (guess === currentWord) {
       document.querySelectorAll('.blank').forEach((span,i) => { span.textContent = currentWord[i].toUpperCase(); span.style.color = '#4a90e2'; });
     }
   }
-  inputEl.value = '';
+  el.value = '';
 };
 
 // File load
