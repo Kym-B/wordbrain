@@ -5,14 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Word Puzzle POC</title>
 <style>
-  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; display: flex; flex-direction: column; align-items: center; padding: 40px; color: #333; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; display: flex; flex-direction: column; align-items: center; padding: 40px; color: #333; }
   h1 { margin-bottom: 20px; font-size: 2rem; }
   .blanks-container { display: flex; gap: 8px; margin-bottom: 20px; }
   .blank { width: 40px; height: 40px; border-bottom: 3px solid #4a90e2; text-align: center; font-size: 1.5rem; font-weight: bold; line-height: 40px; color: transparent; }
-  #score { font-size: 1.2rem; margin-bottom: 10px; }
+  #score, #multiplier { font-size: 1.2rem; margin-bottom: 10px; }
   .dial-container { position: relative; width: 280px; height: 280px; margin: 40px 0; }
   .letters { position: relative; width: 100%; height: 100%; }
-  .letter { position: absolute; width: 60px; height: 60px; background: linear-gradient(145deg, #ffffff, #e6e9ef); border: 2px solid #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 600; color: #4a90e2; cursor: pointer; }
+  .letter {
+    position: absolute; width: 60px; height: 60px; background: linear-gradient(145deg, #ffffff, #e6e9ef);
+    border: 2px solid #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; font-weight: 600; color: #4a90e2; cursor: pointer;
+    transform: scale(0);
+    animation: pop 0.5s ease-out forwards;
+  }
+  .letter:hover { animation: bounce 0.4s ease; }
   .controls { display: flex; gap: 10px; margin: 20px 0 10px; }
   .controls input[type='text'] { padding: 12px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; width: 200px; }
   .controls button { padding: 12px 16px; font-size: 1rem; border: none; border-radius: 4px; background: #4a90e2; color: white; cursor: pointer; }
@@ -21,12 +28,16 @@
   #found-words h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
   #found-words ul { list-style: none; padding-left: 0; max-height: 150px; overflow-y: auto; }
   #found-words li { padding: 4px 0; border-bottom: 1px solid #f0f0f0; }
+
+  @keyframes pop { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
+  @keyframes bounce { 0%,100% { transform: scale(1) translateY(0); } 50% { transform: scale(1) translateY(-8px); } }
 </style>
 </head>
 <body>
   <h1>Wordbrains</h1>
   <div class="blanks-container" id="blanks"></div>
   <div id="score">Score: 0</div>
+  <div id="multiplier">Multiplier: 1x</div>
   <div class="dial-container"><div class="letters" id="letters"></div></div>
   <div class="controls">
     <input type="text" id="word-input" placeholder="Tap letters or type" />
@@ -41,43 +52,34 @@
     <ul id="words-list"></ul>
   </div>
 <script>
-let validWords = [], currentWord = '', letters = [], foundWords = [], score = 0;
+let validWords = [], currentWord = '', letters = [], foundWords = [], score = 0, multiplier = 1.0;
 const radius = 120;
 
 function initPuzzle() {
   if (!validWords.length) return;
   currentWord = validWords[Math.floor(Math.random() * validWords.length)];
-  renderBlanks();
-  letters = shuffleArray(currentWord.toUpperCase().split(''));
-  displayLetters();
-  foundWords = [];
-  score = 0;
-  updateScore();
-  updateFoundWords();
-  document.getElementById('message').textContent = '';
+  renderBlanks(); letters = shuffleArray(currentWord.toUpperCase().split(''));
+  displayLetters(); foundWords = []; score = 0; multiplier = 1.0;
+  updateScore(); updateMultiplier(); updateFoundWords(); document.getElementById('message').textContent = '';
 }
 
 function renderBlanks() {
   const blanks = document.getElementById('blanks'); blanks.innerHTML = '';
-  [...currentWord].forEach(() => {
-    const span = document.createElement('span'); span.className = 'blank'; blanks.appendChild(span);
-  });
+  [...currentWord].forEach(() => { const span = document.createElement('span'); span.className = 'blank'; blanks.appendChild(span); });
 }
 
 function displayLetters() {
   const container = document.getElementById('letters'); container.innerHTML = '';
-  const N = letters.length;
   letters.forEach((ltr, i) => {
-    const angle = (360 / N) * i - 90;
+    const angle = (360 / letters.length) * i - 90;
     const rad = angle * Math.PI / 180;
     const x = Math.cos(rad) * radius;
     const y = Math.sin(rad) * radius;
     const div = document.createElement('div'); div.className = 'letter'; div.textContent = ltr;
     div.style.left = `calc(50% + ${x}px - 30px)`;
     div.style.top = `calc(50% + ${y}px - 30px)`;
-    div.addEventListener('click', () => {
-      document.getElementById('word-input').value += ltr.toLowerCase();
-    });
+    div.style.animationDelay = `${i * 0.05}s`;
+    div.addEventListener('click', () => { document.getElementById('word-input').value += ltr.toLowerCase(); });
     container.appendChild(div);
   });
 }
@@ -85,46 +87,37 @@ function displayLetters() {
 function shuffleArray(arr) { return arr.sort(() => Math.random() - 0.5); }
 
 function updateScore() { document.getElementById('score').textContent = `Score: ${score}`; }
+function updateMultiplier() { document.getElementById('multiplier').textContent = `Multiplier: ${multiplier.toFixed(1)}x`; }
 
 function updateFoundWords() {
   const list = document.getElementById('words-list'); list.innerHTML = '';
-  foundWords.forEach(({word, points}) => {
-    const li = document.createElement('li'); li.textContent = `${word} - ${points}`;
-    list.appendChild(li);
-  });
+  foundWords.forEach(({word, points}) => { const li = document.createElement('li'); li.textContent = `${word} - ${points}`; list.appendChild(li); });
 }
 
 function validateLetters(word) {
   const temp = [...letters];
-  for (let char of word.toUpperCase()) {
-    const idx = temp.indexOf(char);
-    if (idx === -1) return false;
-    temp.splice(idx,1);
-  }
+  for (let char of word.toUpperCase()) { const idx = temp.indexOf(char); if (idx === -1) return false; temp.splice(idx,1); }
   return true;
 }
 
-// Event handlers
+// Handlers
 
-document.getElementById('shuffle-btn').onclick = () => {
-  letters = shuffleArray(letters); displayLetters(); document.getElementById('word-input').value = '';
-};
+document.getElementById('shuffle-btn').onclick = () => { letters = shuffleArray(letters); displayLetters(); document.getElementById('word-input').value = ''; };
 document.getElementById('clear-btn').onclick = () => { document.getElementById('word-input').value = ''; };
 document.getElementById('submit-btn').onclick = () => {
-  const inputEl = document.getElementById('word-input'); const guess = inputEl.value.trim().toLowerCase();
-  const msg = document.getElementById('message');
+  const inputEl = document.getElementById('word-input'); const guess = inputEl.value.trim().toLowerCase(); const msg = document.getElementById('message');
   if (!guess) return;
-  if (!validateLetters(guess)) {
-    msg.textContent = 'Invalid letters!';
-  } else if (!validWords.includes(guess)) {
-    msg.textContent = 'Not in word list!';
-  } else if (foundWords.some(e => e.word === guess)) {
-    msg.textContent = 'Already found!';
-  } else {
-    const points = guess.length * 10;
-    score += points; updateScore();
-    foundWords.push({word: guess, points}); updateFoundWords();
-    msg.textContent = `+${points}!`;
+  if (!validateLetters(guess)) { msg.textContent = 'Invalid letters!'; }
+  else if (!validWords.includes(guess)) { msg.textContent = 'Not in word list!'; }
+  else if (foundWords.some(e => e.word === guess)) { msg.textContent = 'Already found!'; }
+  else {
+    let basePoints = guess.length * 10;
+    let pts = Math.round(basePoints * multiplier);
+    score += pts; updateScore();
+    foundWords.push({word: guess, points: pts}); updateFoundWords();
+    msg.textContent = `+${pts}!`;
+    // increase multiplier
+    multiplier += 0.1; updateMultiplier();
     if (guess === currentWord) {
       document.querySelectorAll('.blank').forEach((span,i) => { span.textContent = currentWord[i].toUpperCase(); span.style.color = '#4a90e2'; });
     }
@@ -132,7 +125,7 @@ document.getElementById('submit-btn').onclick = () => {
   inputEl.value = '';
 };
 
-// File loading
+// File load
 
 document.getElementById('file-input').onchange = e => {
   const file = e.target.files[0]; if (!file) return;
@@ -143,7 +136,7 @@ document.getElementById('file-input').onchange = e => {
   reader.readAsText(file); e.target.value = '';
 };
 
-// Initial placeholder words
+// Init
 validWords = ['cater','react','trace','crate','eat','tea','cat','act'];
 initPuzzle();
 </script>
