@@ -151,28 +151,37 @@
 
     // new round
     function initPuzzle(){
-      const {maxLength,rounds}=levelsConfig[currentLevel];
+      const {maxLength,rounds} = levelsConfig[currentLevel];
       // filter words by level length
-      let pool=validWords.filter(w=>w.length<=maxLength);
+      let pool = validWords.filter(w => w.length <= maxLength);
       // guard against empty pool
-      if(!pool.length){
+      if (!pool.length) {
         console.error('initPuzzle: pool empty, resetting validWords to defaults');
-        validWords=[...defaultWords];
-        pool=validWords.filter(w=>w.length<=maxLength);
+        validWords = [...defaultWords];
+        pool = validWords.filter(w => w.length <= maxLength);
       }
-      currentWord=shuffle(pool)[0];
-      const {maxLength,rounds}=levelsConfig[currentLevel];
-      const pool=validWords.filter(w=>w.length<=maxLength);
-      currentWord=shuffle(pool)[0];
-      const excl2=filter2El.checked, excl3=filter3El.checked;
-      const sub=pool.filter(w=>w!==currentWord&&w.length>=2&&(!excl2||w.length!==2)&&(!excl3||w.length!==3)&&validateMultiset(w,currentWord));
-      wordsLeft=rounds; roundsLeft=rounds;
-      foundWords=[]; score=0; multiplier=1.0;
-      updateStats(); updateWordsLeft();
-      const layout=shuffle(sub).slice(0,rounds);
-      buildCrossword(currentWord,layout);
-      letters=shuffle(currentWord.toUpperCase().split(''));
-      displayLetters(); msgEl.textContent='';
+      currentWord = shuffle(pool)[0];
+      const excl2 = filter2El.checked, excl3 = filter3El.checked;
+      const sub = pool.filter(w =>
+        w !== currentWord &&
+        w.length >= 2 &&
+        (!excl2 || w.length !== 2) &&
+        (!excl3 || w.length !== 3) &&
+        validateMultiset(w, currentWord)
+      );
+      wordsLeft = rounds;
+      roundsLeft = rounds;
+      foundWords = [];
+      score = 0;
+      multiplier = 1.0;
+      updateStats();
+      updateWordsLeft();
+      const layout = shuffle(sub).slice(0, rounds);
+      buildCrossword(currentWord, layout);
+      letters = shuffle(currentWord.toUpperCase().split(''));
+      displayLetters();
+      msgEl.textContent = '';
+    }
     }
 
     // submission
