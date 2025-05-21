@@ -141,22 +141,58 @@
         // Build crossword: main word hidden across top, subwords drop down intersecting main
     function buildCrossword(main, words = []) {
       layoutWords = [...words];
-      const width = main.length;
-      const maxLen = words.length ? Math.max(...words.map(w => w.length)) : 0;
-      const height = maxLen + 1;
-      // track used cells
+      // grid dimensions: allow space for vertical and horizontal words
+      const width = main.length + words.length;
+      const height = main.length + words.length;
+      // initialize used map
       const used = Array.from({ length: height }, () => Array(width).fill(false));
-      // mark main row (row 0)
-      for (let c = 0; c < width; c++) used[0][c] = true;
-      // place each subword vertically starting at row 1
-      words.forEach(w => {
-        // find intersection letter
-        const interChar = w.split('').find(ch => main.includes(ch));
-        const col = main.indexOf(interChar);
-        // place down from row1
-        for (let j = 0; j < w.length; j++) {
-          used[j + 1][col] = true;
+      // place main word at random column in middle row
+      const mainRow = Math.floor(height / 2);
+      const maxStartCol = width - main.length;
+      const mainColStart = Math.floor(Math.random() * (maxStartCol + 1));
+      // mark main cells
+      for (let i = 0; i < main.length; i++) {
+        used[mainRow][mainColStart + i] = true;
+      }
+      // reserve mapping
+      const crossArr = [];
+      // main mapping
+      const mainCells = [];
+      for (let i = 0; i < main.length; i++) {
+        const id = `cell-${mainRow}-${mainColStart + i}`;
+        mainCells.push(id);
+      }
+      crossArr.push({ word: main, cells: mainCells });
+      // place subwords alternating vertical/horizontal
+      words.forEach((w, idx) => {
+        // find an intersecting letter with main
+        const inter = w.split('').find(ch => main.includes(ch));
+        if (!inter) return;
+        const iInWord = w.indexOf(inter);
+        const jInMain = main.indexOf(inter);
+        let cells = [];
+        if (idx % 2 === 0) {
+          // vertical drop
+          const col = mainColStart + jInMain;
+          const startRow = mainRow - iInWord;
+          for (let j = 0; j < w.length; j++) {
+            used[startRow + j][col] = true;
+            cells.push(`cell-${startRow + j}-${col}`);
+          }
+        } else {
+          // horizontal spawn from subword above
+          const parent = crossArr[crossArr.length - 1];
+          // spawn at same row as parent intersect cell
+          const parentCells = parent.cells;
+          const spawnRow = parentCells[iInWord].split('-')[1];
+          const startCol = parseInt(parentCells[iInWord].split('-')[2]) - iInWord;
+          for (let j = 0; j < w.length; j++) {
+            const col = startCol + j;
+            used[spawnRow][col] = true;
+            cells.push(`cell-${spawnRow}-${col}`);
+          }
         }
+        crossArr.push({ word: w, cells });
       });
       // render grid
       crosswordEl.innerHTML = '';
@@ -173,32 +209,15 @@
           crosswordEl.appendChild(cell);
         }
       }
-            // build mapping for reveals
-      const crossArr = [];
-      // main word mapping (hidden until guessed)
-      const mainCells = [];
-      for (let c = 0; c < width; c++) {
-        const id = `cell-0-${c}`;
-        const el = document.getElementById(id);
-        if (el) el.dataset.char = main[c].toUpperCase();
-        mainCells.push(id);
-      }
-      crossArr.push({ word: main, cells: mainCells });
-      // subword mappings
-      words.forEach(w => {
-        const interChar = w.split('').find(ch => main.includes(ch));
-        const col = main.indexOf(interChar);
-        const cells = [];
-        w.split('').forEach((ch, j) => {
-          const row = j + 1;
-          const id = `cell-${row}-${col}`;
-          const el = document.getElementById(id);
+      // assign data-char
+      crossArr.forEach(({ word, cells }) => {
+        word.split('').forEach((ch, j) => {
+          const el = document.getElementById(cells[j]);
           if (el) el.dataset.char = ch.toUpperCase();
-          cells.push(id);
         });
-        crossArr.push({ word: w, cells });
       });
       window.crossLayout = crossArr;
+    }
     }
 
     function fillCrossword() {
