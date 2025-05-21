@@ -62,7 +62,7 @@ function initPuzzle() {
   if (!validWords.length) return;
   const {maxLength, rounds} = levelsConfig[currentLevel];
   // pick main word
-templatePool = validWords.filter(w=>w.length<=maxLength);
+const templatePool = validWords.filter(w=>w.length<=maxLength);
   currentWord = templatePool[Math.floor(Math.random()*templatePool.length)];
 
   // filter subwords with multiset and checkboxes
