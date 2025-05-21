@@ -153,12 +153,16 @@
 
     // Reveal on guess
     function fillCrossword(guess) {
-      const entry = window.crossLayout.find(e => e.word === guess);
-      if (entry) entry.cells.forEach(id => {
-        const cell = document.getElementById(id);
-        if (cell) {
-          cell.textContent = cell.dataset.char;
-          cell.classList.add('filled');
+      // Reveal all words that have been found so far
+      window.crossLayout.forEach(entry => {
+        if (foundWords.includes(entry.word)) {
+          entry.cells.forEach(id => {
+            const cell = document.getElementById(id);
+            if (cell) {
+              cell.textContent = cell.dataset.char;
+              cell.classList.add('filled');
+            }
+          });
         }
       });
     }
