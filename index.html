@@ -254,7 +254,7 @@
         initPuzzle();
         msgEl.textContent = `Loaded ${validWords.length} words`;
       };
-      reader.readAsText(file);
+      reader.readAsText(file)(file);
       e.target.value = '';
     });
 
