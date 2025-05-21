@@ -244,8 +244,8 @@
       if (!file) return;
       const reader = new FileReader();
       reader.onload = ev => {
-        validWords = ev.target.result
-          .split(/[,]+/)
+validWords = ev.target.result
+  .split(/[\r\n,]+/)   // split on commas or any newline
           .map(w => w.trim().toLowerCase())
           .filter(w => w);
         currentLevel = 0;
