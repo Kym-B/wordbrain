@@ -191,12 +191,11 @@
     document.getElementById('clear-btn').addEventListener('click',()=>inputEl.value='');
     filter2El.addEventListener('change',initPuzzle);
     filter3El.addEventListener('change',initPuzzle);
-    document.getElementById('file-input').addEventListener('change', e => {
+        document.getElementById('file-input').addEventListener('change', e => {
       const f = e.target.files[0];
       if (!f) return;
-      const r = new FileReader();
-      r.onload = ev => {
-        // split on commas or any line breaks
+      const reader = new FileReader();
+      reader.onload = ev => {
         validWords = ev.target.result
           .split(/[,]+/)
           .map(w => w.trim().toLowerCase())
@@ -204,6 +203,13 @@
         currentLevel = 0;
         roundsLeft = levelsConfig[0].rounds;
         initPuzzle();
+        msgEl.textContent = `Loaded ${validWords.length} words`;
+      };
+      reader.readAsText(f);
+      e.target.value = '';
+    });
+
+    initPuzzle();
         msgEl.textContent = `Loaded ${validWords.length} words`;
       };
       r.readAsText(f);
