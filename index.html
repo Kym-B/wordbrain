@@ -183,24 +183,30 @@
       });
     }
 
-    // Display dial
+        // Display dial
     function displayLetters() {
+      console.log('displayLetters called, letters:', letters);
+      if (!letters || !letters.length) {
+        console.warn('No letters to display');
+        return;
+      }
       lettersEl.innerHTML = '';
-      letters.forEach((ltr,i) => {
-        const angle = (360/letters.length)*i - 90;
-        const rad = angle*Math.PI/180;
-        const x = Math.cos(rad)*radius, y = Math.sin(rad)*radius;
+      letters.forEach((ltr, i) => {
+        const angle = (360 / letters.length) * i - 90;
+        const rad = angle * Math.PI / 180;
+        const x = Math.cos(rad) * radius;
+        const y = Math.sin(rad) * radius;
         const div = document.createElement('div');
         div.className = 'letter'; div.textContent = ltr;
-        div.style.left = `calc(50%+${x}px-25px)`; div.style.top = `calc(50%+${y}px-25px)`;
-        div.style.animationDelay = `${i*0.05}s`;
+        div.style.left = `calc(50% + ${x}px - 25px)`;
+        div.style.top = `calc(50% + ${y}px - 25px)`;
+        div.style.animationDelay = `${i * 0.05}s`;
         div.onclick = () => { inputEl.value += ltr.toLowerCase(); };
         lettersEl.appendChild(div);
       });
     }
 
-    // Initialize puzzle
-    function initPuzzle() {
+    // Initialize puzzle() {
       const { maxLength, rounds } = levelsConfig[currentLevel];
       let pool = validWords.filter(w => w.length <= maxLength);
       if (!pool.length) { validWords=[...defaultWords]; pool=validWords.filter(w=>w.length<=maxLength);}      
