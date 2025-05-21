@@ -49,7 +49,7 @@
 
 <script>
 // Configuration
-defaultWords = ['cater','react','trace','crate','eat','tea','cat','act'];
+let defaultWords = ['cater','react','trace','crate','eat','tea','cat','act'];
 const levelsConfig = [ {maxLength:4,rounds:4}, {maxLength:5,rounds:5}, {maxLength:6,rounds:6} ];
 
 let validWords = [], currentWord = '', letters = [], foundWords = [], score = 0, multiplier = 1.0;
@@ -58,7 +58,7 @@ let currentLevel = 0, roundsLeft = levelsConfig[0].rounds;
 const radius = 100;
 
 // Initialize puzzle
-def initPuzzle() {
+function initPuzzle() {
   if (!validWords.length) return;
   const {maxLength, rounds} = levelsConfig[currentLevel];
   // pick main word
