@@ -173,8 +173,19 @@
           crosswordEl.appendChild(cell);
         }
       }
-      // build mapping for reveals
-      window.crossLayout = words.map(w => {
+            // build mapping for reveals
+      const crossArr = [];
+      // main word mapping (hidden until guessed)
+      const mainCells = [];
+      for (let c = 0; c < width; c++) {
+        const id = `cell-0-${c}`;
+        const el = document.getElementById(id);
+        if (el) el.dataset.char = main[c].toUpperCase();
+        mainCells.push(id);
+      }
+      crossArr.push({ word: main, cells: mainCells });
+      // subword mappings
+      words.forEach(w => {
         const interChar = w.split('').find(ch => main.includes(ch));
         const col = main.indexOf(interChar);
         const cells = [];
@@ -185,8 +196,9 @@
           if (el) el.dataset.char = ch.toUpperCase();
           cells.push(id);
         });
-        return { word: w, cells };
+        crossArr.push({ word: w, cells });
       });
+      window.crossLayout = crossArr;
     }
 
     function fillCrossword() {
