@@ -141,36 +141,29 @@
         // Build crossword: main word hidden across top, subwords drop down intersecting main
     function buildCrossword(main, words = []) {
       layoutWords = [...words];
-      // grid dimensions: allow space for vertical and horizontal words
-      const width = main.length + words.length;
-      const height = main.length + words.length;
+      // calculate grid dimensions based on max word length
+      const maxLen = words.length ? Math.max(...words.map(w => w.length)) : 0;
+      const width = main.length + maxLen;
+      const height = 2 * maxLen + 1;
+      const mainRow = maxLen;
+      const mainColStart = 0;
       // initialize used map
       const used = Array.from({ length: height }, () => Array(width).fill(false));
-      // place main word at random column in middle row
-      const mainRow = Math.floor(height / 2);
-      const maxStartCol = width - main.length;
-      const mainColStart = Math.floor(Math.random() * (maxStartCol + 1));
-      // mark main cells
-      for (let i = 0; i < main.length; i++) {
-        used[mainRow][mainColStart + i] = true;
-      }
-      // reserve mapping
+      // place main word horizontally at mainRow
       const crossArr = [];
-      // main mapping
       const mainCells = [];
       for (let i = 0; i < main.length; i++) {
-        const id = `cell-${mainRow}-${mainColStart + i}`;
-        mainCells.push(id);
+        used[mainRow][mainColStart + i] = true;
+        mainCells.push(`cell-${mainRow}-${mainColStart + i}`);
       }
       crossArr.push({ word: main, cells: mainCells });
       // place subwords alternating vertical/horizontal
       words.forEach((w, idx) => {
-        // find an intersecting letter with main
-        const inter = w.split('').find(ch => main.includes(ch));
-        if (!inter) return;
-        const iInWord = w.indexOf(inter);
-        const jInMain = main.indexOf(inter);
-        let cells = [];
+        const interChar = w.split('').find(ch => main.includes(ch));
+        if (!interChar) return;
+        const iInWord = w.indexOf(interChar);
+        const jInMain = main.indexOf(interChar);
+        const cells = [];
         if (idx % 2 === 0) {
           // vertical drop
           const col = mainColStart + jInMain;
@@ -180,16 +173,14 @@
             cells.push(`cell-${startRow + j}-${col}`);
           }
         } else {
-          // horizontal spawn from subword above
+          // horizontal spawn from previous entry
           const parent = crossArr[crossArr.length - 1];
-          // spawn at same row as parent intersect cell
           const parentCells = parent.cells;
-          const spawnRow = parentCells[iInWord].split('-')[1];
-          const startCol = parseInt(parentCells[iInWord].split('-')[2]) - iInWord;
+          const interIdx = parent.word.indexOf(interChar);
+          const [_, spawnRow, spawnCol] = parentCells[interIdx].split('-').map(Number);
           for (let j = 0; j < w.length; j++) {
-            const col = startCol + j;
-            used[spawnRow][col] = true;
-            cells.push(`cell-${spawnRow}-${col}`);
+            used[spawnRow][spawnCol + j] = true;
+            cells.push(`cell-${spawnRow}-${spawnCol + j}`);
           }
         }
         crossArr.push({ word: w, cells });
@@ -209,14 +200,14 @@
           crosswordEl.appendChild(cell);
         }
       }
-      // assign data-char
+      // assign dataset chars
       crossArr.forEach(({ word, cells }) => {
         word.split('').forEach((ch, j) => {
           const el = document.getElementById(cells[j]);
           if (el) el.dataset.char = ch.toUpperCase();
         });
       });
-            window.crossLayout = crossArr;
+      window.crossLayout = crossArr;
     }
 
     function fillCrossword() {
