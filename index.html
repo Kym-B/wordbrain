@@ -135,22 +135,19 @@
 
     // Reveal guessed word in grid in grid
     function fillCrossword(guess) {
-      console.log('fillCrossword called for guess:', guess);
-      console.log('Current crossLayout:', window.crossLayout);
-      window.crossLayout.forEach(entry => {
-        if (entry.word === guess) {
-          entry.word.split('').forEach((_, j) => {
-            const cell = document.getElementById(`cell-${entry.rowStart + j}-${entry.col}`);
-            if (cell) {
-              cell.textContent = cell.dataset.char;
-              cell.classList.add('filled');
-            }
-          });
-        }
-      });
+      // Find the mapping for the guessed word and reveal its cells
+      const entry = window.crossLayout.find(e => e.word === guess);
+      if (entry) {
+        entry.cells.forEach(id => {
+          const cell = document.getElementById(id);
+          if (cell) {
+            cell.textContent = cell.dataset.char;
+            cell.classList.add('filled');
+          }
+        });
+      }
     }
 
-    // Display dial letters
     function displayLetters() {
       lettersEl.innerHTML = '';
       letters.forEach((ltr, i) => {
