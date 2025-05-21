@@ -206,7 +206,7 @@
       });
     }
 
-    // Initialize puzzle() {
+        function initPuzzle() {
       const { maxLength, rounds } = levelsConfig[currentLevel];
       let pool = validWords.filter(w => w.length <= maxLength);
       if (!pool.length) { validWords=[...defaultWords]; pool=validWords.filter(w=>w.length<=maxLength);}      
