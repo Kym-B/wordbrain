@@ -36,7 +36,7 @@
     <button id="shuffle-btn">Shuffle</button>
     <button id="clear-btn">Clear</button>
   </div>
-  <input type="file" id="file-input" accept=".txt,.csv" />
+  
   <div id="message"></div>
 
 <script>
@@ -57,7 +57,16 @@ function initPuzzle() {
   const { maxLength, rounds } = levelsConfig[currentLevel];
   const pool = validWords.filter(w => w.length <= maxLength);
   currentWord = pool[Math.floor(Math.random() * pool.length)];
-  currentPossibleWords = validWords.filter(w => w.length >= 2 && validateMultiset(w, currentWord));
+  // apply length filters based on checkboxes
+  const excl2 = document.getElementById('filter-2').checked;
+  const excl3 = document.getElementById('filter-3').checked;
+  currentPossibleWords = validWords.filter(w => {
+    const len = w.length;
+    if (len < 2) return false;
+    if (excl2 && len === 2) return false;
+    if (excl3 && len === 3) return false;
+    return validateMultiset(w, currentWord);
+  });
   // select and limit layout words
   layoutWords = shuffle(currentPossibleWords).slice(0, rounds);
   wordsLeft = layoutWords.length;
