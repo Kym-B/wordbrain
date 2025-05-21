@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Wordbrains POC</title>
+  <title>Wordbrains</title>
   <style>
     :root {
       --bg-start: #fdfbfb;
       --bg-end: #ebedee;
       --cell-filled: #4a90e2;
+      --cell-filled-dark: #357ab8;
       --letter-color: #4a90e2;
     }
     body {
@@ -32,7 +33,7 @@
     .controls { display: flex; gap: 8px; margin: 10px 0; }
     .controls input { padding: 8px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; width: 150px; }
     .controls button { padding: 8px 12px; font-size: 1rem; border: none; border-radius: 4px; background: var(--cell-filled); color: white; cursor: pointer; transition: background 0.3s ease; }
-    .controls button:hover { background: darken(var(--cell-filled), 10%); }
+    .controls button:hover { background: var(--cell-filled-dark); }
     .dial-container { position: relative; width: 240px; height: 240px; margin: 20px 0; }
     .letters { position: relative; width: 100%; height: 100%; }
     .letter { position: absolute; width: 50px; height: 50px; background: linear-gradient(145deg,#ffffff,#e6e9ef); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.2rem; color: var(--letter-color); cursor:pointer; transform:scale(0); animation:pop 0.4s ease-out forwards; transition: color 0.3s ease; }
@@ -45,6 +46,8 @@
   <div id="score"></div>
   <div id="multiplier"></div>
   <div id="words-left"></div>
+
+  <div id="message" class="feedback"></div>
 
   <div id="crossword"></div>
 
@@ -70,7 +73,7 @@
     <ul id="bonus-list"></ul>
   </div>
 
-  <div id="message"></div>
+  
 
   <script>
     const defaultWords = ['cater','react','trace','crate','eat','tea','cat','act'];
@@ -201,11 +204,7 @@
     }
 
     function displayLetters() {
-      console.log('displayLetters:', letters);
-      if (!letters || !letters.length) {
-        console.warn('No letters to display', letters);
-        return;
-      }
+      if (!letters || !letters.length) return;
       lettersEl.innerHTML = '';
       letters.forEach((ltr, i) => {
         const angle = (360 / letters.length) * i - 90;
@@ -224,7 +223,6 @@
     }
 
     function initPuzzle() {
-      console.log('--- initPuzzle ---');
       const { maxLength, rounds } = levelsConfig[currentLevel];
       let pool = validWords.filter(w => w.length <= maxLength);
       if (!pool.length) { validWords = [...defaultWords]; pool = validWords.filter(w => w.length <= maxLength); }
@@ -244,7 +242,6 @@
       updateBonusList();
       buildCrossword(currentWord, layoutWords);
       letters = shuffle(currentWord.toUpperCase().split(''));
-      console.log('InitPuzzle currentWord:', currentWord, 'letters:', letters);
       displayLetters();
       msgEl.textContent = '';
     }
@@ -258,8 +255,7 @@
       const pts = Math.round(guess.length * 10 * multiplier);
       score += pts;
       multiplier += 0.1;
-      if (layoutWords.includes(guess)) { foundWords.push(guess); fillCrossword(); }
-      else { bonusWords.push(guess); updateBonusList(); }
+      if (layoutWords.includes(guess)) { foundWords.push(guess); fillCrossword(); } else { bonusWords.push(guess); updateBonusList(); }
       wordsLeft--;
       roundsLeft--;
       updateStats();
