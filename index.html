@@ -178,7 +178,7 @@
       const reader = new FileReader();
       reader.onload = ev => {
         validWords = ev.target.result
-          .split(/[,]+/)
+          .split(/[\r\n,]+/)
           .map(w => w.trim().toLowerCase())
           .filter(w => w);
         currentLevel = 0;
