@@ -106,7 +106,9 @@
     function buildCrossword(main, words) {
       crosswordEl.innerHTML = '';
       const width = main.length;
-      const height = words.length + 1;
+      // Adjust height to longest vertical word
+      const maxVertLen = words.length ? Math.max(...words.map(w => w.length)) : 0;
+      const height = maxVertLen + 1;
       crosswordEl.style.gridTemplateColumns = `repeat(${width}, 40px)`;
 
       // Create grid cells
