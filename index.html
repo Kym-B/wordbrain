@@ -163,17 +163,13 @@
     }
 
     // events
-      }
-      inputEl.value = '';
-    }
-
-    inputEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();submitWord();}});
-    document.getElementById('submit-btn').addEventListener('click',submitWord);
-    document.getElementById('shuffle-btn').addEventListener('click',()=>{letters=shuffle(letters);displayLetters();inputEl.value='';});
-    document.getElementById('clear-btn').addEventListener('click',()=>inputEl.value='');
-    filter2El.addEventListener('change',initPuzzle);
-    filter3El.addEventListener('change',initPuzzle);
-    document.getElementById('file-input').addEventListener('change',e=>{ const f=e.target.files[0];if(!f)return;const reader=new FileReader();reader.onload=ev=>{validWords=ev.target.result.split(/[\r\n,]+/).map(w=>w.trim().toLowerCase()).filter(w=>w);currentLevel=0;roundsLeft=levelsConfig[0].rounds;initPuzzle();msgEl.textContent=`Loaded ${validWords.length} words`;};reader.readAsText(f);e.target.value='';});
+    inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submitWord(); }});
+    document.getElementById('submit-btn').addEventListener('click', submitWord);
+    document.getElementById('shuffle-btn').addEventListener('click', () => { letters = shuffle(letters); displayLetters(); inputEl.value = ''; });
+    document.getElementById('clear-btn').addEventListener('click', () => inputEl.value = '');
+    filter2El.addEventListener('change', initPuzzle);
+    filter3El.addEventListener('change', initPuzzle);
+    document.getElementById('file-input').addEventListener('change', e =>.addEventListener('change',e=>{ const f=e.target.files[0];if(!f)return;const reader=new FileReader();reader.onload=ev=>{validWords=ev.target.result.split(/[\r\n,]+/).map(w=>w.trim().toLowerCase()).filter(w=>w);currentLevel=0;roundsLeft=levelsConfig[0].rounds;initPuzzle();msgEl.textContent=`Loaded ${validWords.length} words`;};reader.readAsText(f);e.target.value='';});
 
     initPuzzle();
   </script>
