@@ -167,11 +167,20 @@
     // Core puzzle initialization
     function initPuzzle() {
       const { maxLength, rounds } = levelsConfig[currentLevel];
+      // Only words up to the level's max length
       const pool = validWords.filter(w => w.length <= maxLength);
       currentWord = shuffle(pool)[0];
+      // Exclude based on filter checkboxes
       const excl2 = filter2El.checked;
       const excl3 = filter3El.checked;
-      const subpool = validWords.filter(w =>
+      // Subpool now filters the level pool, not all validWords
+      const subpool = pool.filter(w =>
+        w !== currentWord &&
+        w.length >= 2 &&
+        (!excl2 || w.length !== 2) &&
+        (!excl3 || w.length !== 3) &&
+        validateMultiset(w, currentWord)
+      );
         w !== currentWord &&
         w.length >= 2 &&
         (!excl2 || w.length !== 2) &&
