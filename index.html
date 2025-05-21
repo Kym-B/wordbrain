@@ -176,7 +176,9 @@
       // Filter subwords with multiset and checkboxes
       const excl2 = filter2El.checked;
       const excl3 = filter3El.checked;
-      const subpool = validWords.filter(w => {
+            const subpool = validWords.filter(w => {
+        // exclude the main word itself
+        if (w === currentWord) return false;
         if (w.length < 2) return false;
         if (excl2 && w.length === 2) return false;
         if (excl3 && w.length === 3) return false;
