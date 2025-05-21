@@ -174,20 +174,14 @@
       const excl2 = filter2El.checked;
       const excl3 = filter3El.checked;
       // Subpool now filters the level pool, not all validWords
-      const subpool = pool.filter(w =>
+            const subpool = pool.filter(w =>
         w !== currentWord &&
         w.length >= 2 &&
         (!excl2 || w.length !== 2) &&
         (!excl3 || w.length !== 3) &&
         validateMultiset(w, currentWord)
       );
-        w !== currentWord &&
-        w.length >= 2 &&
-        (!excl2 || w.length !== 2) &&
-        (!excl3 || w.length !== 3) &&
-        validateMultiset(w, currentWord)
-      );
-      layoutWords = shuffle(subpool).slice(0, rounds);
+      layoutWords = shuffle(subpool).slice(0, rounds);(subpool).slice(0, rounds);
       wordsLeft = layoutWords.length;
       roundsLeft = rounds;
       foundWords = [];
