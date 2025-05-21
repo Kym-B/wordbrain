@@ -244,9 +244,9 @@
       if (!file) return;
       const reader = new FileReader();
       reader.onload = ev => {
-        validWords = ev.target.result.split(/[
-,]+/)
-          .map(w => w.trim().toLowerCase())
+                validWords = ev.target.result.split(/[
+,]+/)  
+          .map(w => w.trim().toLowerCase())  
           .filter(w => w);
         currentLevel = 0;
         roundsLeft = levelsConfig[0].rounds;
