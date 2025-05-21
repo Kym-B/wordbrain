@@ -198,8 +198,7 @@
       r.onload = ev => {
         // split on commas or any line breaks
         validWords = ev.target.result
-          .split(/[
-,]+/)
+          .split(/[,]+/)
           .map(w => w.trim().toLowerCase())
           .filter(w => w);
         currentLevel = 0;
