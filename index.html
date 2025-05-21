@@ -135,10 +135,25 @@
     }
 
     function fillCrossword(guess) {
+      console.log('fillCrossword called with guess', guess);
+      console.log('crossLayout entries:', window.crossLayout);
       window.crossLayout.forEach(entry => {
         if (entry.word === guess) {
+          console.log('Revealing word:', entry.word, 'at', entry.rowStart, entry.col);
           entry.word.split('').forEach((_, j) => {
-            const cell = document.getElementById(`cell-${entry.rowStart+j}-${entry.col}`);
+            const cellId = `cell-${entry.rowStart+j}-${entry.col}`;
+            console.log('Revealing cell', cellId);
+            const cell = document.getElementById(cellId);
+            if (cell) {
+              cell.textContent = cell.dataset.char;
+              cell.classList.add('filled');
+            } else {
+              console.warn('Cell not found', cellId);
+            }
+          });
+        }
+      });
+    }-${entry.col}`);
             if (cell) {
               cell.textContent = cell.dataset.char;
               cell.classList.add('filled');
