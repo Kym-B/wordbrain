@@ -138,16 +138,57 @@
       });
     }
 
+        // Build crossword: main word hidden across top, subwords drop down intersecting main
     function buildCrossword(main, words = []) {
-      layoutWords = words;
-      let maxAbove = 0, maxBelow = 0;
-      const intersects = words.map(w => {
-        const arr = w.split('');
-        const inter = arr.find(ch => main.includes(ch));
-        const idx = arr.indexOf(inter);
-        maxAbove = Math.max(maxAbove, idx);
-        maxBelow = Math.max(maxBelow, w.length - idx - 1);
-        return { word: w, inter, idx };
+      layoutWords = [...words];
+      const width = main.length;
+      const maxLen = words.length ? Math.max(...words.map(w => w.length)) : 0;
+      const height = maxLen + 1;
+      // track used cells
+      const used = Array.from({ length: height }, () => Array(width).fill(false));
+      // mark main row (row 0)
+      for (let c = 0; c < width; c++) used[0][c] = true;
+      // place each subword vertically starting at row 1
+      words.forEach(w => {
+        // find intersection letter
+        const interChar = w.split('').find(ch => main.includes(ch));
+        const col = main.indexOf(interChar);
+        // place down from row1
+        for (let j = 0; j < w.length; j++) {
+          used[j + 1][col] = true;
+        }
+      });
+      // render grid
+      crosswordEl.innerHTML = '';
+      crosswordEl.style.gridTemplateColumns = `repeat(${width},40px)`;
+      for (let r = 0; r < height; r++) {
+        for (let c = 0; c < width; c++) {
+          const cell = document.createElement('div');
+          if (used[r][c]) {
+            cell.className = 'cell';
+            cell.id = `cell-${r}-${c}`;
+          } else {
+            cell.className = 'block';
+          }
+          crosswordEl.appendChild(cell);
+        }
+      }
+      // build mapping for reveals
+      window.crossLayout = words.map(w => {
+        const interChar = w.split('').find(ch => main.includes(ch));
+        const col = main.indexOf(interChar);
+        const cells = [];
+        w.split('').forEach((ch, j) => {
+          const row = j + 1;
+          const id = `cell-${row}-${col}`;
+          const el = document.getElementById(id);
+          if (el) el.dataset.char = ch.toUpperCase();
+          cells.push(id);
+        });
+        return { word: w, cells };
+      });
+    }
+;
       });
       const mainRow = maxAbove;
       const width = main.length;
