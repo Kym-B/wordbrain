@@ -119,31 +119,21 @@
           crosswordEl.appendChild(cell);
         }
       }
-      // build layout mapping each word to its cell IDs
+      // build layout mapping each word to its cell IDs and set data-char
       window.crossLayout = words.map(w => {
         const inter = w.split('').find(ch => main.includes(ch));
         const col = main.indexOf(inter);
-        // assign data-char to each cell in grid
-        w.split('').forEach((ch, j) => {
-          const cell = document.getElementById(`cell-${j+1}-${col}`);
-          if (cell) cell.dataset.char = ch.toUpperCase();
+        const cells = w.split('').map((ch, j) => {
+          const id = `cell-${j+1}-${col}`;
+          const cellEl = document.getElementById(id);
+          if (cellEl) cellEl.dataset.char = ch.toUpperCase();
+          return id;
         });
-        // store cell IDs for reveal
-        const cells = w.split('').map((_, j) => `cell-${j+1}-${col}`);
         return { word: w, cells };
-      });
-      words.forEach(w => {
-        const inter = w.split('').find(ch => main.includes(ch));
-        const col = main.indexOf(inter);
-        w.split('').forEach((ch, j) => {
-          const cell = document.getElementById(`cell-${j + 1}-${col}`);
-          if (cell) cell.dataset.char = ch.toUpperCase();
-        });
-        window.crossLayout.push({ word: w, rowStart: 1, col });
       });
     }
 
-    // Reveal guessed word in grid
+    // Reveal guessed word in grid in grid
     function fillCrossword(guess) {
       console.log('fillCrossword called for guess:', guess);
       console.log('Current crossLayout:', window.crossLayout);
