@@ -9,8 +9,10 @@
   h1 { margin-bottom: 10px; font-size: 2rem; }
   #level-info, #score, #multiplier, #words-left { font-size: 1rem; margin: 4px 0; }
   #crossword { display: grid; gap: 2px; margin: 20px 0; border: 2px solid #888; padding: 4px; grid-auto-rows: 40px; }
-  .cell { width: 40px; height: 40px; background: #ddd; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; color: transparent; }
-  .filled { background: #4a90e2 !important; color: #fff !important; }
+  .cell { width: 40px; height: 40px; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; color: transparent; }
+  .cell.filled { background: #4a90e2; color: #fff; }
+  .filters { margin: 10px 0; }
+  .filters label { margin-right: 12px; font-size: 0.9rem; }
   .controls { display: flex; gap: 8px; margin: 10px 0; }
   .controls input { padding: 8px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; width: 150px; }
   .controls button { padding: 8px 12px; font-size: 1rem; border: none; border-radius: 4px; background: #4a90e2; color: white; cursor: pointer; }
@@ -22,182 +24,165 @@
 </head>
 <body>
   <h1>Wordbrains</h1>
-  <div id="level-info">Level 1: up to 4 letters (Rounds left: 4)</div>
-  <div id="score">Score: 0</div>
-  <div id="multiplier">Multiplier: 1x</div>
-  <div id="words-left">Words left: 0</div>
+  <div id="level-info"></div>
+  <div id="score"></div>
+  <div id="multiplier"></div>
+  <div id="words-left"></div>
 
   <div id="crossword"></div>
 
   <div class="dial-container"><div class="letters" id="letters"></div></div>
+
   <div class="controls">
     <input type="text" id="word-input" placeholder="Type or tap letters" />
     <button id="submit-btn">Submit</button>
     <button id="shuffle-btn">Shuffle</button>
     <button id="clear-btn">Clear</button>
   </div>
-  
+
+  <input type="file" id="file-input" accept=".txt,.csv" />
+  <div class="filters">
+    <label><input type="checkbox" id="filter-2"> Exclude 2-letter words</label>
+    <label><input type="checkbox" id="filter-3"> Exclude 3-letter words</label>
+  </div>
   <div id="message"></div>
 
 <script>
-// Level configuration
-const levelsConfig = [
-  { maxLength: 4, rounds: 4 },
-  { maxLength: 5, rounds: 5 },
-  { maxLength: 6, rounds: 6 }
-];
+// Configuration
+defaultWords = ['cater','react','trace','crate','eat','tea','cat','act'];
+const levelsConfig = [ {maxLength:4,rounds:4}, {maxLength:5,rounds:5}, {maxLength:6,rounds:6} ];
 
 let validWords = [], currentWord = '', letters = [], foundWords = [], score = 0, multiplier = 1.0;
-let currentPossibleWords = [], layoutWords = [], wordsLeft = 0;
+let layoutWords = [], wordsLeft = 0;
 let currentLevel = 0, roundsLeft = levelsConfig[0].rounds;
 const radius = 100;
 
-function initPuzzle() {
+// Initialize puzzle
+def initPuzzle() {
   if (!validWords.length) return;
-  const { maxLength, rounds } = levelsConfig[currentLevel];
-  const pool = validWords.filter(w => w.length <= maxLength);
-  currentWord = pool[Math.floor(Math.random() * pool.length)];
-  // apply length filters based on checkboxes
+  const {maxLength, rounds} = levelsConfig[currentLevel];
+  // pick main word
+templatePool = validWords.filter(w=>w.length<=maxLength);
+  currentWord = templatePool[Math.floor(Math.random()*templatePool.length)];
+
+  // filter subwords with multiset and checkboxes
   const excl2 = document.getElementById('filter-2').checked;
   const excl3 = document.getElementById('filter-3').checked;
-  currentPossibleWords = validWords.filter(w => {
-    const len = w.length;
-    if (len < 2) return false;
-    if (excl2 && len === 2) return false;
-    if (excl3 && len === 3) return false;
-    return validateMultiset(w, currentWord);
+  const subpool = validWords.filter(w=>{
+    if (w.length<2) return false;
+    if (excl2 && w.length===2) return false;
+    if (excl3 && w.length===3) return false;
+    return validateMultiset(w,currentWord);
   });
-  // select and limit layout words
-  layoutWords = shuffle(currentPossibleWords).slice(0, rounds);
-  wordsLeft = layoutWords.length;
-  wordsLeft = Math.min(currentPossibleWords.length, rounds);
-  updateWordsLeft();
+  layoutWords = shuffle(subpool).slice(0,rounds);
+  wordsLeft = layoutWords.length; roundsLeft = rounds;
+  updateStats(); updateWordsLeft();
   buildCrossword(currentWord, layoutWords);
   letters = shuffle(currentWord.toUpperCase().split(''));
-  displayLetters();
-  updateStats();
-  foundWords = [];
-  document.getElementById('message').textContent = '';
+  displayLetters(); foundWords = [];
+  document.getElementById('message').textContent='';
 }
 
+// Build crossword
 function buildCrossword(main, words) {
-  const cw = document.getElementById('crossword');
-  cw.innerHTML = '';
-  const width = main.length;
-  const height = words.length + 1;
+  const cw = document.getElementById('crossword'); cw.innerHTML = '';
+  const width = main.length, height = words.length+1;
   cw.style.gridTemplateColumns = `repeat(${width},40px)`;
-  // create grid cells
-  for (let r = 0; r < height; r++) {
-    for (let c = 0; c < width; c++) {
-      const cell = document.createElement('div');
-      cell.className = 'cell';
-      cell.id = `cell-${r}-${c}`;
+  for(let r=0;r<height;r++){
+    for(let c=0;c<width;c++){
+      const cell = document.createElement('div'); cell.className='cell'; cell.id=`cell-${r}-${c}`;
       cw.appendChild(cell);
     }
   }
-  // store layout and assign hidden letters
   window.crossLayout = [];
-  words.forEach(w => {
-    const intersectChar = w.split('').find(ch => main.includes(ch));
-    const col = main.indexOf(intersectChar);
-    w.split('').forEach((ch, j) => {
+  words.forEach(w=>{
+    const intersect = w.split('').find(ch=>main.includes(ch));
+    const col = main.indexOf(intersect);
+    w.split('').forEach((ch,j)=>{
       const cell = document.getElementById(`cell-${j+1}-${col}`);
-      if (cell) {
-        cell.dataset.char = ch.toUpperCase();
-      }
+      if(cell) cell.dataset.char = ch.toUpperCase();
     });
-    window.crossLayout.push({ word: w, rowStart: 1, col });
+    window.crossLayout.push({word:w,rowStart:1,col});
   });
 }
 
+// Reveal guessed word
 function fillCrossword(guess) {
-  window.crossLayout.forEach(entry => {
-    if (entry.word === guess) {
-      entry.word.split('').forEach((_, j) => {
-        const cell = document.getElementById(`cell-${entry.rowStart+j}-${entry.col}`);
-        if (cell) {
-          cell.textContent = cell.dataset.char;
-          cell.classList.add('filled');
-        }
-      });
-    }
+  window.crossLayout.forEach(e=>{
+    if(e.word===guess) e.word.split('').forEach((_,j)=>{
+      const cell=document.getElementById(`cell-${e.rowStart+j}-${e.col}`);
+      if(cell){cell.textContent=cell.dataset.char;cell.classList.add('filled');}
+    });
   });
 }
 
-function validateMultiset(w, base) {
-  const tmp = base.toUpperCase().split('');
-  for (const ch of w.toUpperCase()) {
-    const i = tmp.indexOf(ch);
-    if (i < 0) return false;
-    tmp.splice(i, 1);
-  }
-  return true;
+// Validate multiset
+function validateMultiset(w,base){
+  let tmp=base.toUpperCase().split('');
+  for(let ch of w.toUpperCase()){ const i=tmp.indexOf(ch); if(i<0) return false; tmp.splice(i,1);} return true;
 }
 
-function displayLetters() {
-  const cont = document.getElementById('letters'); cont.innerHTML = '';
-  letters.forEach((ltr, i) => {
-    const angle = (360 / letters.length) * i - 90;
-    const rad = angle * Math.PI / 180;
-    const x = Math.cos(rad) * radius;
-    const y = Math.sin(rad) * radius;
-    const div = document.createElement('div');
-    div.className = 'letter'; div.textContent = ltr;
-    div.style.left = `calc(50% + ${x}px - 25px)`;
-    div.style.top = `calc(50% + ${y}px - 25px)`;
-    div.style.animationDelay = `${i * 0.05}s`;
-    div.onclick = () => document.getElementById('word-input').value += ltr.toLowerCase();
+// Display dial
+function displayLetters(){
+  const cont=document.getElementById('letters'); cont.innerHTML='';
+  letters.forEach((ltr,i)=>{
+    const angle=360/letters.length*i-90,rad=angle*Math.PI/180;
+    const x=Math.cos(rad)*radius,y=Math.sin(rad)*radius;
+    const div=document.createElement('div');div.className='letter';div.textContent=ltr;
+    div.style.left=`calc(50%+${x}px-25px)`;div.style.top=`calc(50%+${y}px-25px)`;
+    div.style.animationDelay=`${i*0.05}s`;
+    div.onclick=()=>document.getElementById('word-input').value+=ltr.toLowerCase();
     cont.appendChild(div);
   });
 }
 
-function shuffle(arr) { return arr.sort(() => Math.random() - 0.5); }
+// Shuffle array
+function shuffle(a){return a.sort(()=>Math.random()-0.5);} 
 
-function updateStats() {
-  document.getElementById('level-info').textContent =
+// Update stats UI
+function updateStats(){
+  document.getElementById('level-info').textContent=
     `Level ${currentLevel+1}: up to ${levelsConfig[currentLevel].maxLength} letters (Rounds left: ${roundsLeft})`;
-  document.getElementById('score').textContent = `Score: ${score}`;
-  document.getElementById('multiplier').textContent = `Multiplier: ${multiplier.toFixed(1)}x`;
+  document.getElementById('score').textContent=`Score: ${score}`;
+  document.getElementById('multiplier').textContent=`Multiplier: ${multiplier.toFixed(1)}x`;
 }
+function updateWordsLeft(){document.getElementById('words-left').textContent=`Words left: ${wordsLeft}`;}
 
-function updateWordsLeft() { document.getElementById('words-left').textContent = `Words left: ${wordsLeft}`; }
+// Handlers
+const input=document.getElementById('word-input');
+input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('submit-btn').click();}});
 
-const input = document.getElementById('word-input');
-input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('submit-btn').click(); } });
-
-document.getElementById('submit-btn').onclick = () => {
-  const guess = input.value.trim().toLowerCase(); const msg = document.getElementById('message');
-  if (!guess) return;
-  if (!validateMultiset(guess, currentWord)) msg.textContent = 'Invalid letters!';
-  else if (!validWords.includes(guess)) msg.textContent = 'Not in list!';
-  else if (foundWords.includes(guess)) msg.textContent = 'Already!';
-  else {
-    const pts = Math.round(guess.length * 10 * multiplier);
-    score += pts; multiplier += 0.1; foundWords.push(guess); wordsLeft--; updateWordsLeft(); updateStats(); msg.textContent = `+${pts}!`;
+document.getElementById('submit-btn').onclick=()=>{
+  const guess=input.value.trim().toLowerCase(),msg=document.getElementById('message');
+  if(!guess)return;
+  if(!validateMultiset(guess,currentWord))msg.textContent='Invalid!';
+  else if(!validWords.includes(guess))msg.textContent='Not in list!';
+  else if(foundWords.includes(guess))msg.textContent='Already!';
+  else{
+    const pts=Math.round(guess.length*10*multiplier);
+    score+=pts;multiplier+=0.1;foundWords.push(guess);wordsLeft--;roundsLeft--;
+    updateWordsLeft();updateStats();msg.textContent=`+${pts}!`;
     fillCrossword(guess);
-    if (guess === currentWord) {
-      roundsLeft--; if (roundsLeft <= 0 && currentLevel < levelsConfig.length-1) { currentLevel++; roundsLeft = levelsConfig[currentLevel].rounds; }
-      setTimeout(initPuzzle, 500);
+    if(guess===currentWord){
+      if(roundsLeft<=0 && currentLevel<levelsConfig.length-1){currentLevel++;roundsLeft=levelsConfig[currentLevel].rounds;}
+      setTimeout(initPuzzle,500);
     }
   }
-  input.value = '';
+  input.value='';
 };
 
-document.getElementById('shuffle-btn').onclick = () => { letters = shuffle(letters); displayLetters(); input.value = ''; };
-document.getElementById('clear-btn').onclick = () => input.value = '';
+document.getElementById('shuffle-btn').onclick=()=>{letters=shuffle(letters);displayLetters();input.value='';};
+document.getElementById('clear-btn').onclick=()=>input.value='';
 
-const fileInput = document.getElementById('file-input');
-fileInput.onchange = e => {
-  const f = e.target.files[0]; if (!f) return;
-  const reader = new FileReader(); reader.onload = ev => {
-    validWords = ev.target.result.split(/[\r\n,]+/).map(w => w.trim().toLowerCase()).filter(w => w);
-    currentLevel = 0; roundsLeft = levelsConfig[0].rounds; initPuzzle(); document.getElementById('message').textContent = `Loaded ${validWords.length}`;
-  };
-  reader.readAsText(f); e.target.value = '';
-};
+// File load
+const fileInput=document.getElementById('file-input');
+fileInput.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{
+  validWords=ev.target.result.split(/[\r\n,]+/).map(w=>w.trim().toLowerCase()).filter(w=>w);
+  score=0;multiplier=1.0;currentLevel=0;roundsLeft=levelsConfig[0].rounds;initPuzzle();document.getElementById('message').textContent=`Loaded ${validWords.length}`;
+};r.readAsText(f);e.target.value='';};
 
-// Default word list
-validWords = ['cater','react','trace','crate','eat','tea','cat','act']; initPuzzle();
+// Defaults
+validWords=defaultWords;initPuzzle();
 </script>
 </body>
 </html>
