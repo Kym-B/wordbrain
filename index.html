@@ -252,6 +252,7 @@
         roundsLeft = levelsConfig[0].rounds;
         initPuzzle();
         msgEl.textContent = `Loaded ${validWords.length} words`;
+      }
       };
       reader.readAsText(file)(file);
       e.target.value = '';
