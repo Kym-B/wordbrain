@@ -126,15 +126,20 @@
       });
     }
 
-    function initPuzzle(){ const{maxLength,rounds}=levelsConfig[currentLevel]; let pool=validWords.filter(w=>w.length<=maxLength); if(!pool.length){validWords=[...defaultWords];pool=validWords.filter(w=>w.length<=maxLength);} currentWord=shuffle(pool)[0];
+    function initPuzzle(){
+      console.log('--- initPuzzle ---'); const{maxLength,rounds}=levelsConfig[currentLevel]; let pool=validWords.filter(w=>w.length<=maxLength); if(!pool.length){validWords=[...defaultWords];pool=validWords.filter(w=>w.length<=maxLength);} currentWord=shuffle(pool)[0];
       const excl2=filter2El.checked,excl3=filter3El.checked;
       const sub=pool.filter(w=>w!==currentWord&&w.length>=2&&(!excl2||w.length!==2)&&(!excl3||w.length!==3)&&validateMultiset(w,currentWord));
       layoutWords=shuffle(sub).slice(0,rounds);
       wordsLeft=rounds;roundsLeft=rounds;foundWords=[];bonusWords=[];score=0;multiplier=1.0;
       updateStats();updateWordsLeft();updateBonusList();buildCrossword(currentWord,layoutWords);
-      letters=shuffle(currentWord.toUpperCase().split(''));displayLetters();msgEl.textContent=''; }
+      letters=shuffle(currentWord.toUpperCase().split(''));console.log('InitPuzzle currentWord:', currentWord, 'letters:', letters);
+      displayLetters();msgEl.textContent=''; }
 
-    function submitWord(){ const guess=inputEl.value.trim().toLowerCase(); if(!guess)return;
+    function submitWord(){
+      const guess = inputEl.value.trim().toLowerCase();
+      console.log('submitWord called with guess:', guess, 'layoutWords:', layoutWords);
+      if (!guess) return; const guess=inputEl.value.trim().toLowerCase(); if(!guess)return;
       if(!validateMultiset(guess,currentWord)){msgEl.textContent='Invalid!';return;}      
       if(!validWords.includes(guess)){msgEl.textContent='Not in list!';return;}
       if(foundWords.includes(guess)||bonusWords.includes(guess)){msgEl.textContent='Already!';return;}
