@@ -51,7 +51,6 @@
     <label><input type="checkbox" id="filter-3"> Exclude 3-letter words</label>
   </div>
 
-  <!-- Bonus words panel -->
   <div id="bonus-words">
     <h2>Bonus Words:</h2>
     <ul id="bonus-list"></ul>
@@ -146,7 +145,6 @@
       });
       crosswordEl.innerHTML = '';
       crosswordEl.style.gridTemplateColumns = `repeat(${width},40px)`;
-      intersects.forEach(({ word, inter, idx }) => {}); // preserve mapping
       for (let r=0; r<height; r++) {
         for (let c=0; c<width; c++) {
           const cell = document.createElement('div');
@@ -175,7 +173,6 @@
 
     // Reveal on guess
     function fillCrossword() {
-      // layout words
       window.crossLayout.forEach(entry => {
         if (foundWords.includes(entry.word)) {
           entry.cells.forEach(id => {
@@ -186,7 +183,7 @@
       });
     }
 
-    // Dial
+    // Display dial
     function displayLetters() {
       lettersEl.innerHTML = '';
       letters.forEach((ltr,i) => {
@@ -194,45 +191,44 @@
         const rad = angle*Math.PI/180;
         const x = Math.cos(rad)*radius, y = Math.sin(rad)*radius;
         const div = document.createElement('div');
-        div.className='letter'; div.textContent=ltr;
-        div.style.left=`calc(50%+${x}px-25px)`; div.style.top=`calc(50%+${y}px-25px)`;
-        div.style.animationDelay=`${i*0.05}s`;
-        div.onclick=()=>{ inputEl.value+=ltr.toLowerCase(); };
+        div.className = 'letter'; div.textContent = ltr;
+        div.style.left = `calc(50%+${x}px-25px)`; div.style.top = `calc(50%+${y}px-25px)`;
+        div.style.animationDelay = `${i*0.05}s`;
+        div.onclick = () => { inputEl.value += ltr.toLowerCase(); };
         lettersEl.appendChild(div);
       });
     }
 
-    // Init
+    // Initialize puzzle
     function initPuzzle() {
       const { maxLength, rounds } = levelsConfig[currentLevel];
       let pool = validWords.filter(w => w.length <= maxLength);
-      if (!pool.length) { validWords=[...defaultWords]; pool = validWords.filter(w=>w.length<=maxLength);}      
+      if (!pool.length) { validWords=[...defaultWords]; pool=validWords.filter(w=>w.length<=maxLength);}      
       currentWord = shuffle(pool)[0];
       const excl2 = filter2El.checked, excl3 = filter3El.checked;
       const sub = pool.filter(w=> w!==currentWord && w.length>=2 && (!excl2||w.length!==2) && (!excl3||w.length!==3) && validateMultiset(w,currentWord));
-      wordsLeft=rounds; roundsLeft=rounds; foundWords=[]; bonusWords=[]; score=0; multiplier=1.0;
+      layoutWords = shuffle(sub).slice(0,rounds);
+      wordsLeft = rounds; roundsLeft = rounds; foundWords=[]; bonusWords=[]; score=0; multiplier=1.0;
       updateStats(); updateWordsLeft(); updateBonusList();
-      const layout = shuffle(sub).slice(0,rounds);
-      buildCrossword(currentWord, layout);
+      buildCrossword(currentWord, layoutWords);
       letters = shuffle(currentWord.toUpperCase().split(''));
       displayLetters(); msgEl.textContent='';
     }
 
-    // Submit
+    // Submit handler
     function submitWord() {
       const guess = inputEl.value.trim().toLowerCase(); if(!guess) return;
-      if(!validateMultiset(guess,currentWord)) msgEl.textContent='Invalid!';
-      else if(!validWords.includes(guess)) msgEl.textContent='Not in list!';
-      else if(foundWords.includes(guess)|| bonusWords.includes(guess)) msgEl.textContent='Already!';
+      if(!validateMultiset(guess,currentWord)) { msgEl.textContent='Invalid!'; }
+      else if(!validWords.includes(guess)) { msgEl.textContent='Not in list!'; }
+      else if(foundWords.includes(guess)|| bonusWords.includes(guess)) { msgEl.textContent='Already!'; }
       else {
         const pts = Math.round(guess.length*10*multiplier);
         score+=pts; multiplier+=0.1;
-        // if in layout => grid; else bonus
         if(layoutWords.includes(guess)) { foundWords.push(guess); fillCrossword(); }
         else { bonusWords.push(guess); updateBonusList(); }
         wordsLeft--; roundsLeft--;
         updateStats(); updateWordsLeft(); msgEl.textContent=`+${pts}!`;
-        if(wordsLeft<=0){ if(currentLevel<levelsConfig.length-1) currentLevel++; initPuzzle(); }
+        if(wordsLeft<=0) { if(currentLevel<levelsConfig.length-1) currentLevel++; initPuzzle(); }
       }
       inputEl.value='';
     }
@@ -242,28 +238,20 @@
     document.getElementById('submit-btn').addEventListener('click', submitWord);
     document.getElementById('shuffle-btn').addEventListener('click',()=>{ letters=shuffle(letters); displayLetters(); inputEl.value=''; });
     document.getElementById('clear-btn').addEventListener('click',()=>inputEl.value='');
-    filter2El.addEventListener('change',initPuzzle);
-    filter3El.addEventListener('change',initPuzzle);
-        document.getElementById('file-input').addEventListener('change', e => {
-      const f = e.target.files[0]; if (!f) return;
-      const r = new FileReader();
-      r.onload = ev => {
-        validWords = ev.target.result
-          .split(/[,]+/)   // split on commas or newlines
-          .map(w => w.trim().toLowerCase())
-          .filter(w => w);
-        currentLevel = 0;
-        roundsLeft = levelsConfig[0].rounds;
-        initPuzzle();
-        msgEl.textContent = `Loaded ${validWords.length} words`;
+    filter2El.addEventListener('change', initPuzzle);
+    filter3El.addEventListener('change', initPuzzle);
+    document.getElementById('file-input').addEventListener('change', e => {
+      const f = e.target.files[0]; if(!f) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        validWords = ev.target.result.split(/[\r\n,]+/).map(w=>w.trim().toLowerCase()).filter(w=>w);
+        currentLevel = 0; roundsLeft = levelsConfig[0].rounds; initPuzzle(); msgEl.textContent=`Loaded ${validWords.length} words`;
       };
-      r.readAsText(f);
-      e.target.value = '';
+      reader.readAsText(f);
+      e.target.value='';
     });
 
-    initPuzzle(); msgEl.textContent=`Loaded ${validWords.length} words`; };
-      r.readAsText(f); e.target.value='';
-    });
+    // Start
     initPuzzle();
   </script>
 </body>
