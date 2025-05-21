@@ -132,6 +132,8 @@
 
     // Reveal guessed word in grid
     function fillCrossword(guess) {
+      console.log('fillCrossword called for guess:', guess);
+      console.log('Current crossLayout:', window.crossLayout);
       window.crossLayout.forEach(entry => {
         if (entry.word === guess) {
           entry.word.split('').forEach((_, j) => {
