@@ -188,47 +188,6 @@
         return { word: w, cells };
       });
     }
-;
-      });
-      const mainRow = maxAbove;
-      const width = main.length;
-      const height = maxAbove + 1 + maxBelow;
-      const used = Array.from({ length: height }, () => Array(width).fill(false));
-      for (let c = 0; c < width; c++) used[mainRow][c] = true;
-      intersects.forEach(({ word, inter, idx }) => {
-        const col = main.indexOf(inter);
-        const start = mainRow - idx;
-        for (let j = 0; j < word.length; j++) used[start + j][col] = true;
-      });
-
-      crosswordEl.innerHTML = '';
-      crosswordEl.style.gridTemplateColumns = `repeat(${width},40px)`;
-      for (let r = 0; r < height; r++) {
-        for (let c = 0; c < width; c++) {
-          const cell = document.createElement('div');
-          if (used[r][c]) {
-            cell.className = 'cell';
-            cell.id = `cell-${r}-${c}`;
-          } else {
-            cell.className = 'block';
-          }
-          crosswordEl.appendChild(cell);
-        }
-      }
-
-      window.crossLayout = intersects.map(({ word, inter, idx }) => {
-        const col = main.indexOf(inter);
-        const start = mainRow - idx;
-        const cells = [];
-        word.split('').forEach((ch, j) => {
-          const id = `cell-${start + j}-${col}`;
-          const el = document.getElementById(id);
-          if (el) el.dataset.char = ch.toUpperCase();
-          cells.push(id);
-        });
-        return { word, cells };
-      });
-    }
 
     function fillCrossword() {
       window.crossLayout.forEach(entry => {
