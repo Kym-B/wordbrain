@@ -77,7 +77,7 @@
     function updateWordsLeft(){ wordsLeftEl.textContent = `Words left: ${wordsLeft}`; }
 
     // Build true crossword layout
-    function buildCrossword(main, words) {
+    function buildCrossword(main, words = []) {
       // compute extents
       let maxAbove=0, maxBelow=0;
       const intersects = words.map(w=>{
