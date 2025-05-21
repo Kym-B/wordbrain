@@ -228,18 +228,20 @@
       } else if (foundWords.includes(guess)) {
         msgEl.textContent = 'Already found!';
       } else {
+        // Award points and update stats
         const points = Math.round(guess.length * 10 * multiplier);
         score += points;
         multiplier += 0.1;
         foundWords.push(guess);
         wordsLeft--;
-        roundsLeft--;
         updateStats();
         updateWordsLeft();
         msgEl.textContent = `+${points}!`;
+        // Reveal in crossword grid
         fillCrossword(guess);
-        if (guess === currentWord) {
-          if (roundsLeft <= 0 && currentLevel < levelsConfig.length - 1) {
+        // If all words guessed, advance to next puzzle
+        if (wordsLeft <= 0) {
+          if (currentLevel < levelsConfig.length - 1) {
             currentLevel++;
           }
           setTimeout(initPuzzle, 500);
