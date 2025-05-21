@@ -252,16 +252,31 @@
       if (!validateMultiset(guess, currentWord)) { msgEl.textContent = 'Invalid!'; return; }
       if (!validWords.includes(guess)) { msgEl.textContent = 'Not in list!'; return; }
       if (foundWords.includes(guess) || bonusWords.includes(guess)) { msgEl.textContent = 'Already!'; return; }
-      const pts = Math.round(guess.length * 10 * multiplier);
-      score += pts;
-      multiplier += 0.1;
-      if (layoutWords.includes(guess)) { foundWords.push(guess); fillCrossword(); } else { bonusWords.push(guess); updateBonusList(); }
-      wordsLeft--;
-      roundsLeft--;
+      let pts;
+      // Layout words fill crossword and decrement words left
+      if (layoutWords.includes(guess)) {
+        pts = Math.round(guess.length * 10 * multiplier);
+        score += pts;
+        multiplier += 0.1;
+        foundWords.push(guess);
+        fillCrossword();
+        wordsLeft--;
+        roundsLeft--;
+      } else {
+        // Bonus words always score 1 and do not affect wordsLeft
+        pts = 1;
+        score += pts;
+        bonusWords.push(guess);
+        updateBonusList();
+      }
       updateStats();
       updateWordsLeft();
       msgEl.textContent = `+${pts}!`;
-      if (wordsLeft <= 0) { if (currentLevel < levelsConfig.length - 1) currentLevel++; initPuzzle(); }
+      // Only advance level when all crossword words found
+      if (layoutWords.includes(guess) && wordsLeft <= 0) {
+        if (currentLevel < levelsConfig.length - 1) currentLevel++;
+        initPuzzle();
+      }
       inputEl.value = '';
     }
 
