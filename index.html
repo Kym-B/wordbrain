@@ -136,19 +136,36 @@
       letters=shuffle(currentWord.toUpperCase().split(''));console.log('InitPuzzle currentWord:', currentWord, 'letters:', letters);
       displayLetters();msgEl.textContent=''; }
 
-    function submitWord(){
+    function submitWord() {
       const guess = inputEl.value.trim().toLowerCase();
-      console.log('submitWord called with guess:', guess, 'layoutWords:', layoutWords);
-      if (!guess) return; const guess=inputEl.value.trim().toLowerCase(); if(!guess)return;
-      if(!validateMultiset(guess,currentWord)){msgEl.textContent='Invalid!';return;}      
-      if(!validWords.includes(guess)){msgEl.textContent='Not in list!';return;}
-      if(foundWords.includes(guess)||bonusWords.includes(guess)){msgEl.textContent='Already!';return;}
-      const pts=Math.round(guess.length*10*multiplier);score+=pts;multiplier+=0.1;
-      if(layoutWords.includes(guess)){ foundWords.push(guess); fillCrossword(); }
-      else{ bonusWords.push(guess); updateBonusList(); }
-      wordsLeft--;roundsLeft--;updateStats();updateWordsLeft();msgEl.textContent=`+${pts}!`;
-      if(wordsLeft<=0){if(currentLevel<levelsConfig.length-1)currentLevel++;initPuzzle();}
-      inputEl.value=''; }
+      // validate guess
+      if (!guess) return;
+      if (!validateMultiset(guess, currentWord)) { msgEl.textContent = 'Invalid!'; return; }
+      if (!validWords.includes(guess)) { msgEl.textContent = 'Not in list!'; return; }
+      if (foundWords.includes(guess) || bonusWords.includes(guess)) { msgEl.textContent = 'Already!'; return; }
+      // score and classify
+      const pts = Math.round(guess.length * 10 * multiplier);
+      score += pts; multiplier += 0.1;
+      if (layoutWords.includes(guess)) {
+        foundWords.push(guess);
+        fillCrossword();
+      } else {
+        bonusWords.push(guess);
+        updateBonusList();
+      }
+      wordsLeft--; roundsLeft--;
+      updateStats(); updateWordsLeft(); msgEl.textContent = `+${pts}!`;
+      if (wordsLeft <= 0) {
+        if (currentLevel < levelsConfig.length - 1) currentLevel++;
+        initPuzzle();
+      }
+      inputEl.value = '';
+    }
+
+    // events
+      }
+      inputEl.value = '';
+    }
 
     inputEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();submitWord();}});
     document.getElementById('submit-btn').addEventListener('click',submitWord);
