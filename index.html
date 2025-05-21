@@ -178,8 +178,7 @@
       const reader = new FileReader();
       reader.onload = ev => {
         validWords = ev.target.result
-          .split(/[
-,]+/)
+          .split(/[,]+/)
           .map(w => w.trim().toLowerCase())
           .filter(w => w);
         currentLevel = 0;
@@ -193,3 +192,6 @@
 
     // Start game
     initPuzzle();
+  </script>
+</body>
+</html>
