@@ -105,26 +105,34 @@
 
     // Build crossword grid
     function buildCrossword(main, words) {
-      // Determine grid size: width = main length, height = max vertical word length + 1
+      // Determine vertical word offsets for symmetric placement
+      // Find max above and below extents
+      let maxAbove = 0, maxBelow = 0;
+      const intersects = words.map(w => {
+        const inter = w.split('').find(ch => main.includes(ch));
+        const idx = w.indexOf(inter);
+        maxAbove = Math.max(maxAbove, idx);
+        maxBelow = Math.max(maxBelow, w.length - idx - 1);
+        return { word: w, inter, idx };
+      });
       const width = main.length;
-      const maxLen = words.length ? Math.max(...words.map(w => w.length)) : 0;
-      const height = maxLen + 1;
+      const height = maxAbove + 1 + maxBelow;
       // Build used map
       const used = Array.from({ length: height }, () => Array(width).fill(false));
-      // Mark main row cells (row 0) as used
-      for (let c = 0; c < width; c++) used[0][c] = true;
+      const mainRow = maxAbove;
+      // Mark main row cells
+      for (let c = 0; c < width; c++) used[mainRow][c] = true;
       // Mark vertical word cells
-      words.forEach(w => {
-        const inter = w.split('').find(ch => main.includes(ch));
+      intersects.forEach(({ word, inter, idx }) => {
         const col = main.indexOf(inter);
-        for (let j = 1; j <= w.length; j++) {
-          if (j < height) used[j][col] = true;
+        const startRow = mainRow - idx;
+        for (let j = 0; j < word.length; j++) {
+          used[startRow + j][col] = true;
         }
       });
-      // Clear and set grid template
+      // Render grid
       crosswordEl.innerHTML = '';
       crosswordEl.style.gridTemplateColumns = `repeat(${width}, 40px)`;
-      // Create grid cells or blocks
       for (let r = 0; r < height; r++) {
         for (let c = 0; c < width; c++) {
           const cell = document.createElement('div');
@@ -137,22 +145,23 @@
           crosswordEl.appendChild(cell);
         }
       }
-      // Build layout: map words to their cell IDs and set data-char
-      window.crossLayout = words.map(w => {
-        const inter = w.split('').find(ch => main.includes(ch));
+      // Build layout mapping for reveals
+      window.crossLayout = intersects.map(({ word, inter, idx }) => {
         const col = main.indexOf(inter);
-        const cells = w.split('').map((ch, j) => {
-          const r = j + 1;
+        const startRow = mainRow - idx;
+        const cells = [];
+        word.split('').forEach((ch, j) => {
+          const r = startRow + j;
           const id = `cell-${r}-${col}`;
           const cellEl = document.getElementById(id);
           if (cellEl) cellEl.dataset.char = ch.toUpperCase();
-          return id;
+          cells.push(id);
         });
-        return { word: w, cells };
+        return { word, cells };
       });
     }
 
-    // Reveal guessed word in grid in grid in grid
+    // Reveal guessed word in grid in grid in grid in grid
     function fillCrossword(guess) {
       // Find the mapping for the guessed word and reveal its cells
       const entry = window.crossLayout.find(e => e.word === guess);
