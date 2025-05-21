@@ -152,6 +152,16 @@
     // new round
     function initPuzzle(){
       const {maxLength,rounds}=levelsConfig[currentLevel];
+      // filter words by level length
+      let pool=validWords.filter(w=>w.length<=maxLength);
+      // guard against empty pool
+      if(!pool.length){
+        console.error('initPuzzle: pool empty, resetting validWords to defaults');
+        validWords=[...defaultWords];
+        pool=validWords.filter(w=>w.length<=maxLength);
+      }
+      currentWord=shuffle(pool)[0];
+      const {maxLength,rounds}=levelsConfig[currentLevel];
       const pool=validWords.filter(w=>w.length<=maxLength);
       currentWord=shuffle(pool)[0];
       const excl2=filter2El.checked, excl3=filter3El.checked;
