@@ -238,7 +238,7 @@
       inputEl.value = '';
     });
 
-    // File import handler
+        // File import handler
     document.getElementById('file-input').addEventListener('change', e => {
       const file = e.target.files[0];
       if (!file) return;
@@ -252,9 +252,8 @@
         roundsLeft = levelsConfig[0].rounds;
         initPuzzle();
         msgEl.textContent = `Loaded ${validWords.length} words`;
-      }
       };
-      reader.readAsText(file)(file);
+      reader.readAsText(file);
       e.target.value = '';
     });
 
