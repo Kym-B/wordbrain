@@ -252,11 +252,12 @@
       bonusWords = [];
       // build crossword, which also syncs layoutWords to placed words
       buildCrossword(currentWord, candidates);
-      // recalculate counts based on actual layoutWords
+      // re-sync layoutWords to actual placed subwords
+      layoutWords = window.crossLayout.filter(e => e.word !== currentWord).map(e => e.word);
+      // recalculate counts based on actual placed words
       wordsLeft = layoutWords.length;
       roundsLeft = layoutWords.length;
-      // update UI
-      updateStats();
+      // update UI();
       updateWordsLeft();
       updateBonusList();
       // prepare dial
