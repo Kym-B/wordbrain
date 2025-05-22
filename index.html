@@ -133,9 +133,13 @@
     fetch('https://raw.githubusercontent.com/Kym-B/wordbrain/main/wordbrains-wordlib.txt')
       .then(r => r.text())
       .then(txt => {
-        validWords = txt.split(/[
-,]+/).map(w => w.trim().toLowerCase()).filter(w => w);
+        validWords = txt
+          .split(/[
+,]+/)          
+          .map(w => w.trim().toLowerCase())
+          .filter(w => w);
         initPuzzle();
+      });
       });
 
     // Build grid
