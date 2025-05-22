@@ -237,28 +237,33 @@
 
     function initPuzzle() {
       const { maxLength, rounds } = levelsConfig[currentLevel];
+      // filter pool and select main
       let pool = validWords.filter(w => w.length <= maxLength);
       if (!pool.length) return;
       currentWord = shuffle(pool)[0];
+      // apply filters
       const excl2 = document.getElementById('filter-2').checked;
       const excl3 = document.getElementById('filter-3').checked;
       const sub = pool.filter(w => w !== currentWord && w.length >= 2 && (!excl2 || w.length !== 2) && (!excl3 || w.length !== 3) && validateMultiset(w, currentWord));
-      layoutWords = shuffle(sub).slice(0, rounds);
+      // pick candidate words
+      const candidates = shuffle(sub).slice(0, rounds);
+      // reset state
       foundWords = [];
       bonusWords = [];
-      // build and render grid with actual placed words
-      buildCrossword(currentWord, layoutWords);
-      // recalculate word counts from actual placed words
+      // build crossword, which also syncs layoutWords to placed words
+      buildCrossword(currentWord, candidates);
+      // recalculate counts based on actual layoutWords
       wordsLeft = layoutWords.length;
       roundsLeft = layoutWords.length;
-      // now update UI
+      // update UI
       updateStats();
       updateWordsLeft();
       updateBonusList();
-      // populate dial
+      // prepare dial
       letters = shuffle(currentWord.toUpperCase().split(''));
       displayLetters();
       msgEl.textContent = '';
+    }
     }
     function submitWord() {
       const guess = inputEl.value.trim().toLowerCase(); if (!guess) return;
