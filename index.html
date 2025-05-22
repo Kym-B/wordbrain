@@ -208,6 +208,8 @@
         });
       });
       window.crossLayout = crossArr;
+      // sync layoutWords to only those actually placed (exclude main)
+      layoutWords = crossArr.map(e => e.word).filter(w => w !== currentWord);
     }
 
     function fillCrossword() {
