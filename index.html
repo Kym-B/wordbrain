@@ -248,9 +248,10 @@
       bonusWords = [];
       // build and render grid with actual placed words
       buildCrossword(currentWord, layoutWords);
-      // recalculate wordsLeft based on actual placed layoutWords
+      // recalculate word counts from actual placed words
       wordsLeft = layoutWords.length;
       roundsLeft = layoutWords.length;
+      // now update UI
       updateStats();
       updateWordsLeft();
       updateBonusList();
