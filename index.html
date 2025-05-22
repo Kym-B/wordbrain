@@ -150,7 +150,7 @@
         mainCells.push(`cell-${mainRow}-${i}`);
       }
       crossArr.push({ word: main, cells: mainCells });
-      words.forEach(w => {
+            words.forEach(w => {
         // find intersection letter with main
         const inter = w.split('').find(ch => main.includes(ch));
         if (!inter) return;
@@ -162,12 +162,10 @@
         for (let j = 0; j < w.length; j++) {
           proposed.push([startRow + j, jM]);
         }
-                        // check collisions only
+        // collision check only
         let canPlace = true;
         for (const [r, c] of proposed) {
-          // bounds check
           if (r < 0 || r >= height || c < 0 || c >= width) { canPlace = false; break; }
-          // collision: existing used with conflicting letter
           if (used[r][c]) {
             const cellEl = document.getElementById(`cell-${r}-${c}`);
             const existing = cellEl?.dataset?.char;
@@ -175,8 +173,6 @@
             const ch = w[idxInW].toUpperCase();
             if (existing && existing !== ch) { canPlace = false; break; }
           }
-        }
-        if (!canPlace) return;
         }
         if (!canPlace) return;
         // place word
