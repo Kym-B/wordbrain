@@ -244,7 +244,11 @@
       const excl3 = document.getElementById('filter-3').checked;
       const sub = pool.filter(w => w !== currentWord && w.length >= 2 && (!excl2 || w.length !== 2) && (!excl3 || w.length !== 3) && validateMultiset(w, currentWord));
       layoutWords = shuffle(sub).slice(0, rounds);
-      wordsLeft = rounds; roundsLeft = rounds; foundWords = []; bonusWords = [];
+      // adjust wordsLeft to actual placed words
+      wordsLeft = layoutWords.length;
+      roundsLeft = layoutWords.length;
+      foundWords = [];
+      bonusWords = [];
       updateStats(); updateWordsLeft(); updateBonusList();
       buildCrossword(currentWord, layoutWords);
       letters = shuffle(currentWord.toUpperCase().split(''));
