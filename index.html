@@ -134,12 +134,11 @@
       .then(r => r.text())
       .then(txt => {
         validWords = txt
-          .split(/[\r\n,]+/)         
+          .split(/[
+,]+/)          
           .map(w => w.trim().toLowerCase())
           .filter(w => w);
         initPuzzle();
-      });
-      });
       });
 
     // Build grid
