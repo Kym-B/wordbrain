@@ -157,26 +157,39 @@
         const iW = w.indexOf(inter);
         const jM = main.indexOf(inter);
         const startRow = mainRow - iW;
-        // collision check: ensure any existing intersections match
-        let canPlace = true;
+        // collect proposed cells
+        const proposed = [];
         for (let j = 0; j < w.length; j++) {
-          const r = startRow + j;
-          const c = jM;
-          if (used[r] && used[r][c]) {
+          proposed.push([startRow + j, jM]);
+        }
+        // check collisions and adjacency
+        let canPlace = true;
+        for (const [r, c] of proposed) {
+          // bounds check
+          if (r < 0 || r >= height || c < 0 || c >= width) { canPlace = false; break; }
+          // collision: existing used with conflicting letter
+          if (used[r][c]) {
             const cellEl = document.getElementById(`cell-${r}-${c}`);
             const existing = cellEl?.dataset?.char;
-            if (existing && existing !== w[j].toUpperCase()) {
-              canPlace = false;
-              break;
+            const idxInW = proposed.findIndex(p => p[0] === r && p[1] === c);
+            const ch = w[idxInW].toUpperCase();
+            if (existing && existing !== ch) { canPlace = false; break; }
+          }
+          // adjacency: no used neighbor unless it's also in proposed (intersection exception)
+          const neighbors = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
+          for (const [nr,nc] of neighbors) {
+            if (nr>=0 && nr<height && nc>=0 && nc<width && used[nr][nc]) {
+              const isIntersect = (nr === mainRow && nc === jM && w[idxInW] === inter.toUpperCase());
+              const inProposed = proposed.some(p => p[0]===nr && p[1]===nc);
+              if (!inProposed && !isIntersect) { canPlace = false; break; }
             }
           }
+          if (!canPlace) break;
         }
         if (!canPlace) return;
         // place word
         const cells = [];
-        for (let j = 0; j < w.length; j++) {
-          const r = startRow + j;
-          const c = jM;
+        for (const [r, c] of proposed) {
           used[r][c] = true;
           cells.push(`cell-${r}-${c}`);
         }
