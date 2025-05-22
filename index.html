@@ -161,12 +161,14 @@
         let placed = false;
         // attempt horizontal placement off any intersecting entry
         for (const entry of crossArr) {
-          // find common letter
+          // attempt horizontal placement off any intersecting entry
           const common = w.split('').find(ch => entry.word.includes(ch));
           if (!common) continue;
           const iE = entry.word.indexOf(common);
           const iW = w.indexOf(common);
-          const [r, c] = entry.cells[iE].split('-').map(Number);
+          // guard: ensure a valid cell exists at intersection
+          if (!entry.cells || entry.cells.length <= iE) continue;
+          const [r, c] = entry.cells[iE].split('-').map(Number);.split('-').map(Number);
           const startCol = c - iW;
           // check horizontal bounds
           if (startCol < 0 || startCol + w.length > width) continue;
