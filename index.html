@@ -272,18 +272,14 @@
       bonusWords = [];
       // build crossword, which also syncs layoutWords to placed words
       buildCrossword(currentWord, candidates);
-      // re-sync layoutWords to actual placed subwords
-      layoutWords = window.crossLayout.filter(e => e.word !== currentWord).map(e => e.word);
-      // recalculate counts based on actual placed words
-      wordsLeft = layoutWords.length;
-      roundsLeft = layoutWords.length;
+      // buildCrossword already syncs layoutWords and counts
       updateStats();
       updateWordsLeft();
       updateBonusList();
       // prepare dial
       letters = shuffle(currentWord.toUpperCase().split(''));
       displayLetters();
-      msgEl.textContent = '';
+      msgEl.textContent = '';;
     }
 function submitWord() {
       const guess = inputEl.value.trim().toLowerCase(); if (!guess) return;
