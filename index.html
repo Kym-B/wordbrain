@@ -137,77 +137,114 @@
       });
 
     function buildCrossword(main, words = []) {
-      layoutWords = [...words];
+      // Reset and setup
+      layoutWords = [];
+      // Determine grid size
       const maxLen = words.length ? Math.max(...words.map(w => w.length)) : 0;
       const width = main.length + maxLen;
       const height = 2 * maxLen + 1;
       const mainRow = maxLen;
+      // Cell usage map
       const used = Array.from({ length: height }, () => Array(width).fill(false));
       const crossArr = [];
+
+      // Place main word horizontally at mainRow, starting at col 0
       const mainCells = [];
       for (let i = 0; i < main.length; i++) {
         used[mainRow][i] = true;
         mainCells.push(`cell-${mainRow}-${i}`);
       }
       crossArr.push({ word: main, cells: mainCells });
-            words.forEach(w => {
-        // find intersection letter with main
+
+      // Try placing each subword, preferring horizontal on any existing intersection
+      words.forEach(w => {
+        let placed = false;
+        // attempt horizontal placement off any intersecting entry
+        for (const entry of crossArr) {
+          // find common letter
+          const common = w.split('').find(ch => entry.word.includes(ch));
+          if (!common) continue;
+          const iE = entry.word.indexOf(common);
+          const iW = w.indexOf(common);
+          const [r, c] = entry.cells[iE].split('-').map(Number);
+          const startCol = c - iW;
+          // check horizontal bounds
+          if (startCol < 0 || startCol + w.length > width) continue;
+          // collect proposed cells
+          const cells = [];
+          let ok = true;
+          for (let j = 0; j < w.length; j++) {
+            const rr = Number(r);
+            const cc = startCol + j;
+            // collision check
+            if (used[rr][cc] && document.getElementById(`cell-${rr}-${cc}`).dataset.char !== w[j].toUpperCase()) { ok = false; break; }
+            cells.push(`cell-${rr}-${cc}`);
+          }
+          if (!ok) continue;
+          // commit placement
+          cells.forEach(id => {
+            const [rr, cc] = id.split('-').slice(1).map(Number);
+            used[rr][cc] = true;
+          });
+          crossArr.push({ word: w, cells });
+          placed = true;
+          break;
+        }
+        if (placed) return;
+        // fallback to vertical placement off main
         const inter = w.split('').find(ch => main.includes(ch));
         if (!inter) return;
         const iW = w.indexOf(inter);
         const jM = main.indexOf(inter);
         const startRow = mainRow - iW;
         // collect proposed cells
-        const proposed = [];
-        for (let j = 0; j < w.length; j++) {
-          proposed.push([startRow + j, jM]);
-        }
-                // collision check and adjacency
-        let canPlace = true;
-        for (const [r, c] of proposed) {
-          // bounds check
-          if (r < 0 || r >= height || c < 0 || c >= width) { canPlace = false; break; }
-          // collision: existing used with conflicting letter
-          if (used[r][c]) {
-            const cellEl = document.getElementById(`cell-${r}-${c}`);
-            const existing = cellEl?.dataset?.char;
-            const idxInW = proposed.findIndex(p => p[0] === r && p[1] === c);
-            const ch = w[idxInW].toUpperCase();
-            if (existing && existing !== ch) { canPlace = false; break; }
-          }
-          // adjacency: only allow adjacency at mainRow (intersection)
-          if (r !== mainRow) {
-            // check left/right neighbors
-            const leftUsed = c-1 >=0 && used[r][c-1];
-            const rightUsed = c+1 < width && used[r][c+1];
-            if (leftUsed || rightUsed) { canPlace = false; break; }
-          }
-        }
-        if (!canPlace) return;
-        // place word
         const cells = [];
-        for (const [r, c] of proposed) {
-          used[r][c] = true;
-          cells.push(`cell-${r}-${c}`);
+        for (let j = 0; j < w.length; j++) {
+          const rr = startRow + j;
+          const cc = jM;
+          if (rr < 0 || rr >= height) { return; }
+          // collision check
+          if (used[rr][cc] && document.getElementById(`cell-${rr}-${cc}`).dataset.char !== w[j].toUpperCase()) { return; }
+          cells.push(`cell-${rr}-${cc}`);
         }
+        // commit placement
+        cells.forEach(id => {
+          const [rr, cc] = id.split('-').slice(1).map(Number);
+          used[rr][cc] = true;
+        });
         crossArr.push({ word: w, cells });
       });
+
+      // Render grid
       crosswordEl.innerHTML = '';
       crosswordEl.style.gridTemplateColumns = `repeat(${width},40px)`;
       for (let r = 0; r < height; r++) {
         for (let c = 0; c < width; c++) {
           const cell = document.createElement('div');
-          cell.className = used[r][c] ? 'cell' : 'block';
-          cell.id = `cell-${r}-${c}`;
+          if (used[r][c]) {
+            cell.className = 'cell';
+            cell.id = `cell-${r}-${c}`;
+          } else {
+            cell.className = 'block';
+          }
           crosswordEl.appendChild(cell);
         }
       }
+
+      // Assign characters
       crossArr.forEach(({ word, cells }) => {
         word.split('').forEach((ch, j) => {
-          const el = document.getElementById(cells[j]); if (el) el.dataset.char = ch.toUpperCase();
+          const el = document.getElementById(cells[j]);
+          if (el) el.dataset.char = ch.toUpperCase();
         });
       });
+
+      // Sync layoutWords and counts
       window.crossLayout = crossArr;
+      layoutWords = crossArr.map(e => e.word).filter(w => w !== currentWord);
+      wordsLeft = layoutWords.length;
+      roundsLeft = layoutWords.length;
+    }
       // sync layoutWords to only those actually placed (exclude main)
       layoutWords = crossArr.map(e => e.word).filter(w => w !== currentWord);
     }
