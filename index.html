@@ -150,26 +150,20 @@
         mainCells.push(`cell-${mainRow}-${i}`);
       }
       crossArr.push({ word: main, cells: mainCells });
-      words.forEach((w, idx) => {
+      words.forEach(w => {
         const inter = w.split('').find(ch => main.includes(ch));
         if (!inter) return;
         const iW = w.indexOf(inter);
         const jM = main.indexOf(inter);
         const cells = [];
-        if (idx % 2 === 0) {
-          for (let j = 0; j < w.length; j++) {
-            used[mainRow - iW + j][jM] = true;
-            cells.push(`cell-${mainRow - iW + j}-${jM}`);
-          }
-        } else {
-          const parent = crossArr[crossArr.length - 1];
-          const [_, pr, pc] = parent.cells[iW].split('-').map(Number);
-          for (let j = 0; j < w.length; j++) {
-            used[pr][pc + j] = true;
-            cells.push(`cell-${pr}-${pc + j}`);
-          }
+        // vertical drop from mainRow
+        const startRow = mainRow - iW;
+        for (let j = 0; j < w.length; j++) {
+          used[startRow + j][jM] = true;
+          cells.push(`cell-${startRow + j}-${jM}`);
         }
         crossArr.push({ word: w, cells });
+      });
       });
       crosswordEl.innerHTML = '';
       crosswordEl.style.gridTemplateColumns = `repeat(${width},40px)`;
