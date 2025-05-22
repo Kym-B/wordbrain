@@ -244,15 +244,21 @@
       const excl3 = document.getElementById('filter-3').checked;
       const sub = pool.filter(w => w !== currentWord && w.length >= 2 && (!excl2 || w.length !== 2) && (!excl3 || w.length !== 3) && validateMultiset(w, currentWord));
       layoutWords = shuffle(sub).slice(0, rounds);
-      // adjust wordsLeft to actual placed words
-      wordsLeft = layoutWords.length;
-      roundsLeft = layoutWords.length;
       foundWords = [];
       bonusWords = [];
-      updateStats(); updateWordsLeft(); updateBonusList();
+      // build and render grid with actual placed words
       buildCrossword(currentWord, layoutWords);
+      // recalculate wordsLeft based on actual placed layoutWords
+      wordsLeft = layoutWords.length;
+      roundsLeft = layoutWords.length;
+      updateStats();
+      updateWordsLeft();
+      updateBonusList();
+      // populate dial
       letters = shuffle(currentWord.toUpperCase().split(''));
-      displayLetters(); msgEl.textContent = '';
+      displayLetters();
+      msgEl.textContent = '';
+    }
     }
 
     function submitWord() {
