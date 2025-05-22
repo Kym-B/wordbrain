@@ -162,16 +162,25 @@
         for (let j = 0; j < w.length; j++) {
           proposed.push([startRow + j, jM]);
         }
-        // collision check only
+                // collision check and adjacency
         let canPlace = true;
         for (const [r, c] of proposed) {
+          // bounds check
           if (r < 0 || r >= height || c < 0 || c >= width) { canPlace = false; break; }
+          // collision: existing used with conflicting letter
           if (used[r][c]) {
             const cellEl = document.getElementById(`cell-${r}-${c}`);
             const existing = cellEl?.dataset?.char;
             const idxInW = proposed.findIndex(p => p[0] === r && p[1] === c);
             const ch = w[idxInW].toUpperCase();
             if (existing && existing !== ch) { canPlace = false; break; }
+          }
+          // adjacency: only allow adjacency at mainRow (intersection)
+          if (r !== mainRow) {
+            // check left/right neighbors
+            const leftUsed = c-1 >=0 && used[r][c-1];
+            const rightUsed = c+1 < width && used[r][c+1];
+            if (leftUsed || rightUsed) { canPlace = false; break; }
           }
         }
         if (!canPlace) return;
