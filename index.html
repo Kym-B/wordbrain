@@ -240,12 +240,11 @@
       });
 
       // Sync layoutWords and counts
-      window.crossLayout = crossArr;
+            window.crossLayout = crossArr;
       layoutWords = crossArr.map(e => e.word).filter(w => w !== currentWord);
       wordsLeft = layoutWords.length;
       roundsLeft = layoutWords.length;
-    }
-      // sync layoutWords to only those actually placed (exclude main)
+    }// sync layoutWords to only those actually placed (exclude main)
       layoutWords = crossArr.map(e => e.word).filter(w => w !== currentWord);
     }
 
