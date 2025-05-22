@@ -134,8 +134,7 @@
       .then(r => r.text())
       .then(txt => {
         // split on newlines or commas
-        validWords = txt.split(/[
-,]+/)
+        validWords = txt.split(/[,]+/)
           .map(w => w.trim().toLowerCase())
           .filter(w => w);
         initPuzzle();
