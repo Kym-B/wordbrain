@@ -259,8 +259,6 @@
       displayLetters();
       msgEl.textContent = '';
     }
-    }
-
     function submitWord() {
       const guess = inputEl.value.trim().toLowerCase(); if (!guess) return;
       if (!validateMultiset(guess, currentWord)) { msgEl.textContent = 'Invalid!'; return; }
