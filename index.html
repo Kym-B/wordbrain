@@ -162,7 +162,7 @@
         for (let j = 0; j < w.length; j++) {
           proposed.push([startRow + j, jM]);
         }
-        // check collisions and adjacency
+                // check collisions only
         let canPlace = true;
         for (const [r, c] of proposed) {
           // bounds check
@@ -175,16 +175,8 @@
             const ch = w[idxInW].toUpperCase();
             if (existing && existing !== ch) { canPlace = false; break; }
           }
-          // adjacency: no used neighbor unless it's also in proposed (intersection exception)
-          const neighbors = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
-          for (const [nr,nc] of neighbors) {
-            if (nr>=0 && nr<height && nc>=0 && nc<width && used[nr][nc]) {
-              const isIntersect = (nr === mainRow && nc === jM && w[idxInW] === inter.toUpperCase());
-              const inProposed = proposed.some(p => p[0]===nr && p[1]===nc);
-              if (!inProposed && !isIntersect) { canPlace = false; break; }
-            }
-          }
-          if (!canPlace) break;
+        }
+        if (!canPlace) return;
         }
         if (!canPlace) return;
         // place word
