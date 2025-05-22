@@ -129,7 +129,7 @@
       });
     }
 
-        // Load word library
+            // Load word library
     fetch('https://raw.githubusercontent.com/Kym-B/wordbrain/main/wordbrains-wordlib.txt')
       .then(r => r.text())
       .then(txt => {
@@ -139,6 +139,7 @@
           .map(w => w.trim().toLowerCase())
           .filter(w => w);
         initPuzzle();
+      });
       });
       });
 
